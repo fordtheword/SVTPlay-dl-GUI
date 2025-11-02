@@ -144,9 +144,9 @@ class SVTPlayDownloader:
             if options and options.get('subtitle', Config.DEFAULT_SUBTITLE):
                 cmd.append('--subtitle')
 
-            # Add output directory with series folder
-            output_pattern = os.path.join(download_dir, '%(title)s', '%(title)s_%(episodename)s.%(ext)s')
-            cmd.extend(['-o', output_pattern])
+            # Add output directory - let svtplay-dl use its default naming
+            # Just ensure we run from the correct directory
+            cmd.extend(['-o', download_dir + os.sep])
 
             # Add URL
             cmd.append(url)
@@ -235,9 +235,8 @@ class SVTPlayDownloader:
             if options and options.get('subtitle', Config.DEFAULT_SUBTITLE):
                 cmd.append('--subtitle')
 
-            # Add output directory with series folder and season/episode numbering
-            output_pattern = os.path.join(download_dir, '%(title)s', '%(title)s_S%(season)sE%(episode)s_%(episodename)s.%(ext)s')
-            cmd.extend(['-o', output_pattern])
+            # Add output directory - let svtplay-dl use its default naming for seasons
+            cmd.extend(['-o', download_dir + os.sep])
 
             # Add URL
             cmd.append(url)
