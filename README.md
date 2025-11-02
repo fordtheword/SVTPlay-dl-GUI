@@ -171,6 +171,11 @@ PATH hanteras vanligtvis automatiskt när du använder `apt`, `dnf` eller andra 
    ```
 
 5. **Starta servern**
+
+   **Windows - Enklaste sättet:**
+   - Dubbelklicka på `start.bat`
+
+   **Alla plattformar - Manuellt:**
    ```bash
    python app.py
    ```
@@ -282,7 +287,20 @@ DEFAULT_SUBTITLE = True     # Ladda ner undertexter som standard
 
 ## Underhåll och uppdatering
 
-### Uppdatera svtplay-dl
+### Enkel uppgradering (Windows)
+
+**Dubbelklicka på `upgrade.bat`** - det är allt! 🚀
+
+Skriptet gör automatiskt:
+1. ✅ Hämtar senaste uppdateringar från GitHub
+2. ✅ Uppgraderar alla Python-paket (inklusive svtplay-dl)
+3. ✅ Frågar om du vill starta servern direkt
+
+Se `UPGRADE-GUIDE.md` för mer information.
+
+### Manuell uppdatering (alla plattformar)
+
+#### Uppdatera svtplay-dl
 
 Du kan uppdatera svtplay-dl till senaste versionen **utan att ändra din kod**:
 
