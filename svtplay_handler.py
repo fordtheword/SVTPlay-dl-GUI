@@ -144,6 +144,10 @@ class SVTPlayDownloader:
             if options and options.get('subtitle', Config.DEFAULT_SUBTITLE):
                 cmd.append('--subtitle')
 
+            # Add token if provided (for TV4 Play and premium content)
+            if options and options.get('token'):
+                cmd.extend(['--token', options.get('token')])
+
             # Add output directory - let svtplay-dl use its default naming
             # Just ensure we run from the correct directory
             cmd.extend(['-o', download_dir + os.sep])
@@ -234,6 +238,10 @@ class SVTPlayDownloader:
             # Add subtitle option
             if options and options.get('subtitle', Config.DEFAULT_SUBTITLE):
                 cmd.append('--subtitle')
+
+            # Add token if provided (for TV4 Play and premium content)
+            if options and options.get('token'):
+                cmd.extend(['--token', options.get('token')])
 
             # Add output directory - let svtplay-dl use its default naming for seasons
             cmd.extend(['-o', download_dir + os.sep])

@@ -68,6 +68,36 @@
                         </div>
                     </div>
 
+                    <!-- Token (for TV4 Play and premium content) -->
+                    <div class="mb-3">
+                        <label for="tokenInput" class="form-label">
+                            Token (valfritt - krävs för TV4 Play och premium-innehåll)
+                            <button type="button" class="btn btn-sm btn-outline-info ms-2" data-bs-toggle="collapse" data-bs-target="#tokenInstructions">
+                                <i class="bi bi-question-circle"></i> Hur hittar jag token?
+                            </button>
+                        </label>
+                        <input type="text" class="form-control" id="tokenInput"
+                               placeholder="Valfritt - endast för TV4 Play och premium-sajter">
+
+                        <!-- Token Instructions (collapsed by default) -->
+                        <div class="collapse mt-2" id="tokenInstructions">
+                            <div class="card card-body bg-light">
+                                <h6><i class="bi bi-info-circle"></i> Så hittar du token för TV4 Play:</h6>
+                                <ol class="small mb-0">
+                                    <li>Öppna <a href="https://www.tv4play.se/" target="_blank">TV4 Play</a> i en ny flik och logga in</li>
+                                    <li>Tryck <kbd>F12</kbd> för att öppna Developer Tools</li>
+                                    <li>Gå till fliken <strong>"Application"</strong> (Chrome) eller <strong>"Storage"</strong> (Firefox)</li>
+                                    <li>Välj <strong>"Cookies"</strong> → <strong>"https://www.tv4play.se"</strong></li>
+                                    <li>Hitta cookie som heter <code>token</code>, <code>jwt</code> eller <code>vimond_token</code></li>
+                                    <li>Kopiera värdet och klistra in ovan</li>
+                                </ol>
+                                <p class="small text-muted mb-0 mt-2">
+                                    <strong>Tips:</strong> Token är oftast giltig i 30+ dagar. Spara den i en profil så slipper du kopiera varje gång!
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Download Type -->
                     <div class="mb-3">
                         <label class="form-label">Nedladdningstyp</label>

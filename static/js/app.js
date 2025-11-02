@@ -40,6 +40,7 @@ async function handleDownload(event) {
 
     const url = document.getElementById('urlInput').value.trim();
     const downloadDir = document.getElementById('downloadDir').value.trim();
+    const token = document.getElementById('tokenInput').value.trim();
     const downloadType = document.querySelector('input[name="downloadType"]:checked').value;
     const quality = document.getElementById('qualitySelect').value;
     const subtitle = document.getElementById('subtitleCheck').checked;
@@ -57,6 +58,11 @@ async function handleDownload(event) {
     // Add download directory if specified
     if (downloadDir) {
         options.download_dir = downloadDir;
+    }
+
+    // Add token if specified
+    if (token) {
+        options.token = token;
     }
 
     try {
@@ -370,6 +376,13 @@ function loadProfileData() {
                 document.getElementById('qualitySelect').value = profile.quality;
                 document.getElementById('subtitleCheck').checked = profile.subtitle;
 
+                // Set token if available
+                if (profile.token) {
+                    document.getElementById('tokenInput').value = profile.token;
+                } else {
+                    document.getElementById('tokenInput').value = '';
+                }
+
                 // Set download type
                 if (profile.download_type === 'season') {
                     document.getElementById('typeSeason').checked = true;
@@ -390,6 +403,7 @@ async function saveProfile() {
     const name = document.getElementById('seriesName').value.trim();
     const url = document.getElementById('urlInput').value.trim();
     const downloadDir = document.getElementById('downloadDir').value.trim();
+    const token = document.getElementById('tokenInput').value.trim();
     const quality = document.getElementById('qualitySelect').value;
     const subtitle = document.getElementById('subtitleCheck').checked;
     const downloadType = document.querySelector('input[name="downloadType"]:checked').value;
@@ -417,6 +431,11 @@ async function saveProfile() {
         subtitle: subtitle,
         download_type: downloadType
     };
+
+    // Add token if specified
+    if (token) {
+        profileData.token = token;
+    }
 
     try {
         const response = await fetch(API_BASE + '/api/profiles', {

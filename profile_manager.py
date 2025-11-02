@@ -30,7 +30,7 @@ class ProfileManager:
             print(f"Error saving profiles: {e}")
             return False
 
-    def save_profile(self, name, url, download_dir, quality='best', subtitle=True, download_type='single'):
+    def save_profile(self, name, url, download_dir, quality='best', subtitle=True, download_type='single', token=None):
         """Save or update a download profile"""
         profile_id = name.lower().replace(' ', '_')
 
@@ -45,6 +45,10 @@ class ProfileManager:
             'created_at': self.profiles.get(profile_id, {}).get('created_at', datetime.now().isoformat()),
             'updated_at': datetime.now().isoformat()
         }
+
+        # Add token if provided
+        if token:
+            self.profiles[profile_id]['token'] = token
 
         if self._save_profiles():
             return {'success': True, 'profile': self.profiles[profile_id]}

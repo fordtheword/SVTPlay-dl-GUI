@@ -141,8 +141,9 @@ def save_profile():
     quality = data.get('quality', Config.DEFAULT_QUALITY)
     subtitle = data.get('subtitle', Config.DEFAULT_SUBTITLE)
     download_type = data.get('download_type', 'single')
+    token = data.get('token')  # Optional
 
-    result = profile_manager.save_profile(name, url, download_dir, quality, subtitle, download_type)
+    result = profile_manager.save_profile(name, url, download_dir, quality, subtitle, download_type, token)
     return jsonify(result)
 
 @app.route('/api/profiles/<profile_id>', methods=['DELETE'])
