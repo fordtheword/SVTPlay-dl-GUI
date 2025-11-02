@@ -23,18 +23,26 @@ Andra svenska streamingsajter som stöds av svtplay-dl:
 - Dplay
 - och många fler...
 
-## Installation på Windows
+## Installation
 
 ### Förutsättningar
 
 1. **Python 3.8 eller senare**
    - Ladda ner från [python.org](https://www.python.org/downloads/)
-   - **VIKTIGT**: Bocka i "Add Python to PATH" under installationen
+   - **VIKTIGT (Windows)**: Bocka i "Add Python to PATH" under installationen
 
 2. **ffmpeg** (krävs för svtplay-dl)
-   - Ladda ner från [ffmpeg.org](https://ffmpeg.org/download.html#build-windows)
-   - Eller använd [Chocolatey](https://chocolatey.org/): `choco install ffmpeg`
-   - Eller använd [Scoop](https://scoop.sh/): `scoop install ffmpeg`
+   - **Windows**:
+     - Ladda ner från [ffmpeg.org](https://ffmpeg.org/download.html#build-windows)
+     - Eller använd [Chocolatey](https://chocolatey.org/): `choco install ffmpeg`
+     - Eller använd [Scoop](https://scoop.sh/): `scoop install ffmpeg`
+   - **macOS**: `brew install ffmpeg`
+   - **Linux**: `sudo apt install ffmpeg` (Debian/Ubuntu) eller `sudo dnf install ffmpeg` (Fedora)
+
+3. **Windows Terminal (rekommenderat för Windows-användare)**
+   - Moderna kommandotolk med bättre support för Python
+   - Installera från [Microsoft Store](https://aka.ms/terminal) eller `winget install Microsoft.WindowsTerminal`
+   - Alternativt kan du använda PowerShell eller CMD (äldre)
 
 ### Steg-för-steg installation
 
@@ -47,28 +55,50 @@ Andra svenska streamingsajter som stöds av svtplay-dl:
 2. **Skapa en virtuell miljö** (rekommenderat)
    ```bash
    python -m venv venv
-   venv\Scripts\activate
    ```
 
-3. **Installera beroenden**
+3. **Aktivera den virtuella miljön**
+
+   **Windows (PowerShell / Windows Terminal):**
+   ```powershell
+   venv\Scripts\Activate.ps1
+   ```
+
+   **Windows (CMD):**
+   ```cmd
+   venv\Scripts\activate.bat
+   ```
+
+   **macOS / Linux:**
+   ```bash
+   source venv/bin/activate
+   ```
+
+   **Obs!** Om du får felmeddelande om körning av skript i PowerShell, kör:
+   ```powershell
+   Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+   ```
+
+4. **Installera beroenden**
+
+   Detta installerar Flask, svtplay-dl och alla andra nödvändiga paket:
    ```bash
    pip install -r requirements.txt
    ```
 
-4. **Starta servern**
+5. **Starta servern**
    ```bash
    python app.py
    ```
 
-5. **Öppna webbläsaren**
+6. **Öppna webbläsaren**
    - På samma dator: `http://localhost:5000`
    - Från andra datorer i nätverket: `http://[DIN_SERVER_IP]:5000`
 
-   För att hitta din server-IP:
-   ```bash
-   ipconfig
-   ```
-   Leta efter "IPv4 Address" under din nätverksadapter
+   **Hitta din server-IP:**
+   - **Windows**: `ipconfig` (leta efter "IPv4 Address")
+   - **macOS**: `ifconfig` (leta efter "inet" under din nätverksadapter)
+   - **Linux**: `ip addr` eller `hostname -I`
 
 ## Användning
 
@@ -118,6 +148,41 @@ DEFAULT_QUALITY = 'best'    # Standardkvalitet
 DEFAULT_SUBTITLE = True     # Ladda ner undertexter som standard
 ```
 
+## Underhåll och uppdatering
+
+### Uppdatera svtplay-dl
+
+Du kan uppdatera svtplay-dl till senaste versionen **utan att ändra din kod**:
+
+1. **Aktivera den virtuella miljön** (se installationsinstruktioner ovan)
+
+2. **Uppdatera svtplay-dl:**
+   ```bash
+   pip install --upgrade svtplay-dl
+   ```
+
+3. **Kontrollera versionen:**
+   ```bash
+   svtplay-dl --version
+   ```
+
+4. **Testa att det fungerar** genom att ladda ner ett testprogram i webbgränssnittet
+
+**Varför det fungerar:** Din kod använder svtplay-dl som ett externt kommandoradsverktyg. Så länge kommandoradsgränssnittet förblir kompatibelt (vilket det nästan alltid gör), kommer allt fungera efter uppdatering.
+
+**När du bör uppdatera:**
+- När nya funktioner läggs till i svtplay-dl
+- När säkerhetsuppdateringar släpps
+- När nedladdningar plötsligt slutar fungera (kan bero på ändringar på streamingsajterna)
+
+### Uppdatera alla Python-paket
+
+För att uppdatera alla paket (Flask, svtplay-dl, etc.):
+
+```bash
+pip install --upgrade -r requirements.txt
+```
+
 ## Köra som Windows-tjänst (valfritt)
 
 För att programmet ska starta automatiskt när Windows startar:
@@ -153,22 +218,35 @@ För att andra datorer ska kunna komma åt servern:
 ## Felsökning
 
 ### "Python hittades inte"
-- Kontrollera att Python är installerat: `python --version`
-- Se till att Python finns i PATH
+- Kontrollera att Python är installerat: `python --version` (eller `python3 --version` på macOS/Linux)
+- **Windows**: Se till att Python finns i PATH (bocka i "Add Python to PATH" vid installation)
+- **macOS/Linux**: Installera via pakethanterare eller python.org
 
 ### "ffmpeg hittades inte"
 - Kontrollera att ffmpeg är installerat: `ffmpeg -version`
-- Se till att ffmpeg finns i PATH
+- **Windows**: Se till att ffmpeg finns i PATH, eller installera via Chocolatey/Scoop
+- **macOS**: `brew install ffmpeg`
+- **Linux**: `sudo apt install ffmpeg` eller `sudo dnf install ffmpeg`
+
+### "Kan inte aktivera virtuell miljö" (PowerShell)
+- Kör: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
+- Eller använd Windows Terminal istället för gamla PowerShell
 
 ### "Kan inte nå servern från annan dator"
-- Kontrollera brandväggsinställningar
-- Kontrollera att servern körs på `0.0.0.0` (inte `127.0.0.1`)
-- Verifiera IP-adressen med `ipconfig`
+- **Alla OS**: Kontrollera att servern körs på `0.0.0.0` (inte `127.0.0.1`) i `config.py`
+- **Windows**: Kontrollera brandväggsinställningar (se sektion nedan)
+- **macOS**: Kontrollera System Preferences → Security & Privacy → Firewall
+- **Linux**: Kontrollera firewall: `sudo ufw allow 5000` (Ubuntu) eller `sudo firewall-cmd --add-port=5000/tcp` (Fedora)
+- Verifiera IP-adressen:
+  - Windows: `ipconfig`
+  - macOS: `ifconfig`
+  - Linux: `ip addr` eller `hostname -I`
 
 ### "Nedladdningen misslyckas"
 - Kontrollera att URL:en är korrekt
 - Vissa program kan vara geo-blockerade eller kräva inloggning
 - Kontrollera att svtplay-dl fungerar via kommandoraden: `svtplay-dl [URL]`
+- Försök uppdatera svtplay-dl: `pip install --upgrade svtplay-dl`
 
 ## Utveckling
 
