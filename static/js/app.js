@@ -16,6 +16,10 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('saveProfileBtn').addEventListener('click', saveProfile);
     document.getElementById('deleteProfileBtn').addEventListener('click', deleteProfile);
     document.getElementById('profileSelect').addEventListener('change', loadProfileData);
+    document.getElementById('upgradeBtn').addEventListener('click', upgradeSystem);
+
+    // Load system info
+    loadSystemInfo();
 
     // Auto-refresh downloads every 5 seconds
     setInterval(loadDownloads, 5000);
@@ -476,5 +480,113 @@ async function deleteProfile() {
         }
     } catch (error) {
         showNotification('Fel vid borttagning av profil: ' + error.message, 'danger');
+    }
+}
+
+// System Management Functions
+
+// Load system information
+async function loadSystemInfo() {
+    try {
+        const response = await fetch(API_BASE + '/api/system/info');
+        const result = await response.json();
+
+        if (result.success) {
+            const info = result.info;
+            const systemInfoDiv = document.getElementById('systemInfo');
+
+            systemInfoDiv.innerHTML = `
+                <div class="row small">
+                    <div class="col-md-6">
+                        <strong>Python:</strong> ${info.python_version}<br>
+                        <strong>svtplay-dl:</strong> ${info.svtplay_dl_version}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Branch:</strong> ${info.git_branch}<br>
+                        <strong>Commit:</strong> ${info.latest_commit}
+                    </div>
+                </div>
+            `;
+        } else {
+            document.getElementById('systemInfo').innerHTML =
+                '<small class="text-danger">Kunde inte ladda systeminformation</small>';
+        }
+    } catch (error) {
+        console.error('Error loading system info:', error);
+        document.getElementById('systemInfo').innerHTML =
+            '<small class="text-danger">Fel: ' + error.message + '</small>';
+    }
+}
+
+// Upgrade system
+async function upgradeSystem() {
+    const upgradeBtn = document.getElementById('upgradeBtn');
+    const upgradeOutput = document.getElementById('upgradeOutput');
+    const upgradeAlert = document.getElementById('upgradeAlert');
+    const upgradeDetails = document.getElementById('upgradeDetails');
+
+    if (!confirm('Är du säker på att du vill uppgradera systemet?\n\nDetta kommer att:\n- Hämta senaste koden från GitHub\n- Uppgradera alla Python-paket\n\nServern behöver startas om efter uppgraderingen.')) {
+        return;
+    }
+
+    // Disable button and show loading
+    upgradeBtn.disabled = true;
+    upgradeBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uppgraderar...';
+
+    upgradeOutput.style.display = 'block';
+    upgradeAlert.className = 'alert alert-info';
+    upgradeAlert.textContent = 'Uppgradering pågår... Detta kan ta några minuter.';
+    upgradeDetails.textContent = '';
+
+    try {
+        const response = await fetch(API_BASE + '/api/system/upgrade', {
+            method: 'POST'
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            upgradeAlert.className = 'alert alert-success';
+            upgradeAlert.textContent = result.message;
+
+            let details = '=== Git Output ===\n' + result.git_output + '\n\n';
+            if (result.pip_output) {
+                details += '=== Pip Output ===\n' + result.pip_output;
+            }
+            upgradeDetails.textContent = details;
+
+            if (result.restart_required) {
+                upgradeAlert.textContent += '\n\nVIKTIGT: Starta om servern för att använda de nya uppdateringarna!';
+                showNotification('Uppgradering klar! Starta om servern.', 'warning');
+            } else {
+                showNotification('Systemet är redan uppdaterat!', 'success');
+            }
+
+            // Reload system info
+            setTimeout(loadSystemInfo, 2000);
+        } else {
+            upgradeAlert.className = 'alert alert-danger';
+            upgradeAlert.textContent = 'Uppgradering misslyckades: ' + result.error;
+
+            let details = '';
+            if (result.git_output) {
+                details += '=== Git Output ===\n' + result.git_output + '\n\n';
+            }
+            if (result.error) {
+                details += '=== Error ===\n' + result.error;
+            }
+            upgradeDetails.textContent = details;
+
+            showNotification('Uppgradering misslyckades!', 'danger');
+        }
+    } catch (error) {
+        upgradeAlert.className = 'alert alert-danger';
+        upgradeAlert.textContent = 'Fel vid uppgradering: ' + error.message;
+        upgradeDetails.textContent = error.stack || error.message;
+        showNotification('Fel vid uppgradering: ' + error.message, 'danger');
+    } finally {
+        // Re-enable button
+        upgradeBtn.disabled = false;
+        upgradeBtn.innerHTML = '<i class="bi bi-arrow-up-circle"></i> Uppgradera system';
     }
 }
