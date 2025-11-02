@@ -28,12 +28,44 @@
                 </h5>
 
                 <form id="downloadForm">
+                    <!-- Saved Profile Selection -->
+                    <div class="mb-3">
+                        <label for="profileSelect" class="form-label">Sparade serier</label>
+                        <div class="input-group">
+                            <select class="form-select" id="profileSelect">
+                                <option value="">-- Välj en sparad serie eller skapa ny --</option>
+                            </select>
+                            <button type="button" class="btn btn-outline-danger" id="deleteProfileBtn" disabled>
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Series Name -->
+                    <div class="mb-3">
+                        <label for="seriesName" class="form-label">Serie-namn (för att spara profil)</label>
+                        <input type="text" class="form-control" id="seriesName"
+                               placeholder="t.ex. På Spåret">
+                        <div class="form-text">Valfritt: Ge ett namn för att spara denna nedladdning för framtida användning</div>
+                    </div>
+
                     <!-- URL Input -->
                     <div class="mb-3">
                         <label for="urlInput" class="form-label">Video-URL</label>
                         <input type="url" class="form-control" id="urlInput"
                                placeholder="https://www.svtplay.se/video/..." required>
                         <div class="form-text">Klistra in länken till programmet eller serien du vill ladda ner</div>
+                    </div>
+
+                    <!-- Download Directory -->
+                    <div class="mb-3">
+                        <label for="downloadDir" class="form-label">Nedladdningsmapp</label>
+                        <input type="text" class="form-control" id="downloadDir"
+                               placeholder="t.ex. D:\TV-Serier eller /home/user/videos">
+                        <div class="form-text">
+                            Ange den mapp där du vill spara nedladdningen. Om tom används standardmappen "downloads".
+                            <br><strong>Tips:</strong> Ange din TV-serie-mapp, så skapas en undermapp för serien automatiskt.
+                        </div>
                     </div>
 
                     <!-- Download Type -->
@@ -80,6 +112,10 @@
                         <button type="submit" class="btn btn-primary btn-lg">
                             <i class="bi bi-download"></i>
                             Starta nedladdning
+                        </button>
+                        <button type="button" class="btn btn-success btn-lg" id="saveProfileBtn">
+                            <i class="bi bi-bookmark-plus"></i>
+                            Spara profil
                         </button>
                         <button type="button" class="btn btn-outline-secondary btn-lg" id="checkInfoBtn">
                             <i class="bi bi-info-circle"></i>

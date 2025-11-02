@@ -6,11 +6,14 @@ Ett webbaserat grafiskt gränssnitt för [svtplay-dl](https://svtplay-dl.se/), v
 
 - 📺 Ladda ner enskilda TV-program
 - 📦 Ladda ner hela säsonger automatiskt
+- 💾 **Anpassade nedladdningsmappar** - Välj var dina filer ska sparas
+- 📑 **Sparade profiler** - Spara inställningar för återkommande nedladdningar (perfekt för veckovisa program)
 - 🌐 Webbaserat gränssnitt tillgängligt från alla datorer i nätverket
 - 📊 Realtidsuppdatering av nedladdningsstatus
 - 🎬 Kvalitetsval (1080p, 720p, 480p eller bästa tillgängliga)
 - 💬 Automatisk nedladdning av undertexter
-- 📁 Filhantering med möjlighet att ladda ner färdiga filer
+- 📁 Automatisk organisering i undermappar per serie
+- 🔄 Filhantering med möjlighet att ladda ner färdiga filer
 
 ## Supporterade sajter
 
@@ -43,6 +46,87 @@ Andra svenska streamingsajter som stöds av svtplay-dl:
    - Moderna kommandotolk med bättre support för Python
    - Installera från [Microsoft Store](https://aka.ms/terminal) eller `winget install Microsoft.WindowsTerminal`
    - Alternativt kan du använda PowerShell eller CMD (äldre)
+
+### Lägg till Python och FFmpeg i PATH
+
+För att kunna köra `python` och `ffmpeg` från kommandoraden måste de finnas i din systems PATH.
+
+#### Windows
+
+**För Python:**
+1. Om du glömde bocka i "Add Python to PATH" under installationen:
+   - Öppna "Redigera systemets miljövariabler" (sök i Start-menyn)
+   - Klicka på "Miljövariabler..." längst ner
+   - Under "Systemvariabler", hitta "Path" och klicka "Redigera"
+   - Klicka "Ny" och lägg till (ersätt med din Python-sökväg):
+     - `C:\Users\[DITT ANVÄNDARNAMN]\AppData\Local\Programs\Python\Python311`
+     - `C:\Users\[DITT ANVÄNDARNAMN]\AppData\Local\Programs\Python\Python311\Scripts`
+   - Klicka "OK" på alla fönster
+   - **Starta om terminalen** för att ändringarna ska träda i kraft
+
+2. Testa att det fungerar:
+   ```cmd
+   python --version
+   ```
+
+**För FFmpeg:**
+1. Om du installerade manuellt (inte via Chocolatey/Scoop):
+   - Packa upp FFmpeg till en mapp, t.ex. `C:\ffmpeg`
+   - Öppna "Redigera systemets miljövariabler"
+   - Klicka på "Miljövariabler..."
+   - Under "Systemvariabler", hitta "Path" och klicka "Redigera"
+   - Klicka "Ny" och lägg till: `C:\ffmpeg\bin`
+   - Klicka "OK" på alla fönster
+   - **Starta om terminalen**
+
+2. Testa att det fungerar:
+   ```cmd
+   ffmpeg -version
+   ```
+
+**Om du använder Chocolatey eller Scoop** läggs allt automatiskt till i PATH!
+
+#### macOS
+
+PATH hanteras vanligtvis automatiskt på macOS när du använder Homebrew. Om något inte fungerar:
+
+1. Öppna Terminal
+2. Redigera din shell-konfiguration:
+   ```bash
+   nano ~/.zshrc   # För nyare macOS (Catalina+)
+   # eller
+   nano ~/.bash_profile   # För äldre macOS
+   ```
+
+3. Lägg till (om Python/FFmpeg installerades på annan plats):
+   ```bash
+   export PATH="/usr/local/bin:$PATH"
+   ```
+
+4. Spara och ladda om:
+   ```bash
+   source ~/.zshrc
+   ```
+
+#### Linux
+
+PATH hanteras vanligtvis automatiskt när du använder `apt`, `dnf` eller andra pakethanterare. Om något inte fungerar:
+
+1. Öppna Terminal
+2. Redigera `.bashrc`:
+   ```bash
+   nano ~/.bashrc
+   ```
+
+3. Lägg till i slutet:
+   ```bash
+   export PATH="/usr/local/bin:$PATH"
+   ```
+
+4. Spara och ladda om:
+   ```bash
+   source ~/.bashrc
+   ```
 
 ### Steg-för-steg installation
 
@@ -102,23 +186,70 @@ Andra svenska streamingsajter som stöds av svtplay-dl:
 
 ## Användning
 
-### Ladda ner ett enskilt program
+### Snabbstart: Ladda ner ett enskilt program
 
 1. Gå till SVT Play och hitta programmet du vill ladda ner
 2. Kopiera URL:en från adressfältet
 3. Klistra in URL:en i "Video-URL" fältet
-4. Välj "Enskilt avsnitt"
-5. Välj önskad kvalitet
-6. Klicka på "Starta nedladdning"
+4. (Valfritt) Ange en anpassad nedladdningsmapp, t.ex. `D:\TV-Serier`
+5. Välj "Enskilt avsnitt"
+6. Välj önskad kvalitet
+7. Klicka på "Starta nedladdning"
 
 ### Ladda ner en hel säsong
 
 1. Gå till SVT Play och hitta serien
 2. Kopiera URL:en (kan vara från vilket avsnitt som helst i serien)
 3. Klistra in URL:en i "Video-URL" fältet
-4. Välj "Hela säsongen"
-5. Välj önskad kvalitet
-6. Klicka på "Starta nedladdning"
+4. (Valfritt) Ange nedladdningsmapp
+5. Välj "Hela säsongen"
+6. Välj önskad kvalitet
+7. Klicka på "Starta nedladdning"
+
+### Använda sparade profiler (för återkommande nedladdningar)
+
+**För att spara en profil:**
+1. Ange ett **Serie-namn** (t.ex. "På Spåret")
+2. Ange **Video-URL** till serien
+3. Ange **Nedladdningsmapp** där du vill spara serien (t.ex. `D:\TV-Serier\På Spåret`)
+4. Välj kvalitet och övriga inställningar
+5. Klicka på **"Spara profil"**
+
+**För att använda en sparad profil:**
+1. Välj profilen från **"Sparade serier"**-dropdown
+2. Alla inställningar fylls i automatiskt
+3. Klicka på **"Starta nedladdning"**
+
+**För att ta bort en profil:**
+1. Välj profilen från dropdown
+2. Klicka på papperskorgs-ikonen bredvid dropdown
+
+**Användningsfall:**
+- Ladda ner nya avsnitt av "På Spåret" varje vecka utan att ange URL och mapp varje gång
+- Ha olika profiler för olika serier med olika nedladdningsmappar
+- Spara inställningar för återkommande nedladdningar
+
+### Anpassade nedladdningsmappar
+
+Du kan ange var filer ska laddas ner genom att fylla i "Nedladdningsmapp"-fältet:
+
+**Exempel:**
+- Windows: `D:\TV-Serier` eller `C:\Users\Anders\Videos\Serier`
+- macOS: `/Users/anders/Videos/Serier`
+- Linux: `/home/anders/videos/serier`
+
+**Filstruktur:**
+Programmet skapar automatiskt undermappar för varje serie:
+```
+D:\TV-Serier\
+├── På Spåret\
+│   ├── På Spåret_S01E01_Avsnitt 1.mp4
+│   └── På Spåret_S01E02_Avsnitt 2.mp4
+└── Aktuellt\
+    └── Aktuellt_Kvällens nyheter.mp4
+```
+
+**Om inget anges:** Filer hamnar i standardmappen `downloads/` i projektets katalog.
 
 ### Hämta information
 
@@ -129,9 +260,10 @@ Innan du laddar ner kan du klicka på "Hämta info" för att se:
 
 ### Nedladdade filer
 
-- Alla nedladdade filer hamnar i mappen `downloads/`
+- Filer hamnar i den angivna mappen (eller `downloads/` om ingen mapp angetts)
 - Du kan ladda ner filer direkt från webbgränssnittet
 - Filer namnges automatiskt med programmets titel och avsnittsnummer
+- Varje serie får sin egen undermapp
 
 ## Konfiguration
 

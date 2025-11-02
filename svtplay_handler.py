@@ -66,6 +66,9 @@ class SVTPlayDownloader:
         """Start a download task"""
         download_id = self._generate_id()
 
+        # Get custom download directory if provided
+        download_dir = options.get('download_dir', Config.DOWNLOAD_DIR) if options else Config.DOWNLOAD_DIR
+
         self.downloads[download_id] = {
             'id': download_id,
             'url': url,
@@ -75,7 +78,8 @@ class SVTPlayDownloader:
             'started_at': datetime.now().isoformat(),
             'finished_at': None,
             'error': None,
-            'output_file': None
+            'output_file': None,
+            'download_dir': download_dir
         }
 
         # Start download in a separate thread
@@ -94,6 +98,12 @@ class SVTPlayDownloader:
             self.downloads[download_id]['status'] = 'downloading'
             self.downloads[download_id]['message'] = 'Downloading...'
 
+            # Get custom download directory if provided
+            download_dir = options.get('download_dir', Config.DOWNLOAD_DIR) if options else Config.DOWNLOAD_DIR
+
+            # Ensure download directory exists
+            os.makedirs(download_dir, exist_ok=True)
+
             # Build command
             cmd = ['svtplay-dl']
 
@@ -105,8 +115,9 @@ class SVTPlayDownloader:
             if options and options.get('subtitle', Config.DEFAULT_SUBTITLE):
                 cmd.append('--subtitle')
 
-            # Add output directory
-            cmd.extend(['-o', os.path.join(Config.DOWNLOAD_DIR, '%(title)s_%(episodename)s.%(ext)s')])
+            # Add output directory with series folder
+            output_pattern = os.path.join(download_dir, '%(title)s', '%(title)s_%(episodename)s.%(ext)s')
+            cmd.extend(['-o', output_pattern])
 
             # Add URL
             cmd.append(url)
@@ -143,6 +154,9 @@ class SVTPlayDownloader:
         """Download entire season/series"""
         download_id = self._generate_id()
 
+        # Get custom download directory if provided
+        download_dir = options.get('download_dir', Config.DOWNLOAD_DIR) if options else Config.DOWNLOAD_DIR
+
         self.downloads[download_id] = {
             'id': download_id,
             'url': url,
@@ -152,7 +166,8 @@ class SVTPlayDownloader:
             'started_at': datetime.now().isoformat(),
             'finished_at': None,
             'error': None,
-            'type': 'season'
+            'type': 'season',
+            'download_dir': download_dir
         }
 
         # Start download in a separate thread
@@ -171,6 +186,12 @@ class SVTPlayDownloader:
             self.downloads[download_id]['status'] = 'downloading'
             self.downloads[download_id]['message'] = 'Downloading season...'
 
+            # Get custom download directory if provided
+            download_dir = options.get('download_dir', Config.DOWNLOAD_DIR) if options else Config.DOWNLOAD_DIR
+
+            # Ensure download directory exists
+            os.makedirs(download_dir, exist_ok=True)
+
             # Build command
             cmd = ['svtplay-dl']
 
@@ -185,8 +206,9 @@ class SVTPlayDownloader:
             if options and options.get('subtitle', Config.DEFAULT_SUBTITLE):
                 cmd.append('--subtitle')
 
-            # Add output directory
-            cmd.extend(['-o', os.path.join(Config.DOWNLOAD_DIR, '%(title)s_S%(season)sE%(episode)s_%(episodename)s.%(ext)s')])
+            # Add output directory with series folder and season/episode numbering
+            output_pattern = os.path.join(download_dir, '%(title)s', '%(title)s_S%(season)sE%(episode)s_%(episodename)s.%(ext)s')
+            cmd.extend(['-o', output_pattern])
 
             # Add URL
             cmd.append(url)

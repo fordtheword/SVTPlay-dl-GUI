@@ -6,12 +6,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load initial data
     loadDownloads();
     loadFiles();
+    loadProfiles();
 
     // Set up event listeners
     document.getElementById('downloadForm').addEventListener('submit', handleDownload);
     document.getElementById('checkInfoBtn').addEventListener('click', checkInfo);
     document.getElementById('refreshBtn').addEventListener('click', loadDownloads);
     document.getElementById('refreshFilesBtn').addEventListener('click', loadFiles);
+    document.getElementById('saveProfileBtn').addEventListener('click', saveProfile);
+    document.getElementById('deleteProfileBtn').addEventListener('click', deleteProfile);
+    document.getElementById('profileSelect').addEventListener('change', loadProfileData);
 
     // Auto-refresh downloads every 5 seconds
     setInterval(loadDownloads, 5000);
@@ -31,6 +35,7 @@ async function handleDownload(event) {
     event.preventDefault();
 
     const url = document.getElementById('urlInput').value.trim();
+    const downloadDir = document.getElementById('downloadDir').value.trim();
     const downloadType = document.querySelector('input[name="downloadType"]:checked').value;
     const quality = document.getElementById('qualitySelect').value;
     const subtitle = document.getElementById('subtitleCheck').checked;
@@ -44,6 +49,11 @@ async function handleDownload(event) {
         quality: quality,
         subtitle: subtitle
     };
+
+    // Add download directory if specified
+    if (downloadDir) {
+        options.download_dir = downloadDir;
+    }
 
     try {
         const endpoint = downloadType === 'season' ? '/api/download/season' : '/api/download';
@@ -65,7 +75,7 @@ async function handleDownload(event) {
                     : 'Nedladdning startad!',
                 'success'
             );
-            document.getElementById('urlInput').value = '';
+            // Don't clear fields if user wants to keep them for repeated downloads
             document.getElementById('infoCard').style.display = 'none';
             loadDownloads();
         } else {
@@ -298,4 +308,173 @@ function formatFileSize(bytes) {
     const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+}
+
+// Profile Management Functions
+
+// Load all profiles
+async function loadProfiles() {
+    try {
+        const response = await fetch(API_BASE + '/api/profiles');
+        const result = await response.json();
+
+        if (result.success) {
+            const profileSelect = document.getElementById('profileSelect');
+
+            // Clear existing options except the first one
+            profileSelect.innerHTML = '<option value="">-- Välj en sparad serie eller skapa ny --</option>';
+
+            // Add profiles to dropdown
+            result.profiles.forEach(profile => {
+                const option = document.createElement('option');
+                option.value = profile.id;
+                option.textContent = profile.name;
+                profileSelect.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading profiles:', error);
+    }
+}
+
+// Load profile data when selected
+function loadProfileData() {
+    const profileSelect = document.getElementById('profileSelect');
+    const selectedProfileId = profileSelect.value;
+    const deleteBtn = document.getElementById('deleteProfileBtn');
+
+    if (!selectedProfileId) {
+        // Clear form when no profile is selected
+        deleteBtn.disabled = true;
+        return;
+    }
+
+    // Enable delete button
+    deleteBtn.disabled = false;
+
+    // Fetch and load profile data
+    fetch(API_BASE + '/api/profiles/' + selectedProfileId)
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                const profile = result.profile;
+
+                // Populate form fields
+                document.getElementById('seriesName').value = profile.name;
+                document.getElementById('urlInput').value = profile.url;
+                document.getElementById('downloadDir').value = profile.download_dir;
+                document.getElementById('qualitySelect').value = profile.quality;
+                document.getElementById('subtitleCheck').checked = profile.subtitle;
+
+                // Set download type
+                if (profile.download_type === 'season') {
+                    document.getElementById('typeSeason').checked = true;
+                } else {
+                    document.getElementById('typeSingle').checked = true;
+                }
+
+                showNotification('Profil "' + profile.name + '" laddad!', 'success');
+            }
+        })
+        .catch(error => {
+            showNotification('Fel vid laddning av profil: ' + error.message, 'danger');
+        });
+}
+
+// Save profile
+async function saveProfile() {
+    const name = document.getElementById('seriesName').value.trim();
+    const url = document.getElementById('urlInput').value.trim();
+    const downloadDir = document.getElementById('downloadDir').value.trim();
+    const quality = document.getElementById('qualitySelect').value;
+    const subtitle = document.getElementById('subtitleCheck').checked;
+    const downloadType = document.querySelector('input[name="downloadType"]:checked').value;
+
+    if (!name) {
+        showNotification('Vänligen ange ett serie-namn för att spara profilen', 'warning');
+        return;
+    }
+
+    if (!url) {
+        showNotification('Vänligen ange en URL', 'warning');
+        return;
+    }
+
+    if (!downloadDir) {
+        showNotification('Vänligen ange en nedladdningsmapp', 'warning');
+        return;
+    }
+
+    const profileData = {
+        name: name,
+        url: url,
+        download_dir: downloadDir,
+        quality: quality,
+        subtitle: subtitle,
+        download_type: downloadType
+    };
+
+    try {
+        const response = await fetch(API_BASE + '/api/profiles', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(profileData)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showNotification('Profil "' + name + '" sparad!', 'success');
+            loadProfiles(); // Reload profiles dropdown
+        } else {
+            showNotification('Fel: ' + result.error, 'danger');
+        }
+    } catch (error) {
+        showNotification('Fel vid sparning av profil: ' + error.message, 'danger');
+    }
+}
+
+// Delete profile
+async function deleteProfile() {
+    const profileSelect = document.getElementById('profileSelect');
+    const selectedProfileId = profileSelect.value;
+
+    if (!selectedProfileId) {
+        showNotification('Ingen profil vald', 'warning');
+        return;
+    }
+
+    const selectedOption = profileSelect.options[profileSelect.selectedIndex];
+    const profileName = selectedOption.textContent;
+
+    if (!confirm('Är du säker på att du vill ta bort profilen "' + profileName + '"?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(API_BASE + '/api/profiles/' + selectedProfileId, {
+            method: 'DELETE'
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showNotification('Profil "' + profileName + '" borttagen!', 'success');
+
+            // Clear form
+            document.getElementById('seriesName').value = '';
+            document.getElementById('urlInput').value = '';
+            document.getElementById('downloadDir').value = '';
+            document.getElementById('profileSelect').value = '';
+            document.getElementById('deleteProfileBtn').disabled = true;
+
+            loadProfiles(); // Reload profiles dropdown
+        } else {
+            showNotification('Fel: ' + result.error, 'danger');
+        }
+    } catch (error) {
+        showNotification('Fel vid borttagning av profil: ' + error.message, 'danger');
+    }
 }

@@ -3,6 +3,7 @@ from flask_cors import CORS
 import os
 from config import Config
 from svtplay_handler import SVTPlayDownloader
+from profile_manager import ProfileManager
 
 # Initialize Flask app
 app = Flask(__name__, static_folder='static', template_folder='templates')
@@ -11,8 +12,9 @@ CORS(app)
 # Initialize configuration
 Config.init_app()
 
-# Initialize downloader
+# Initialize downloader and profile manager
 downloader = SVTPlayDownloader()
+profile_manager = ProfileManager()
 
 @app.route('/')
 def index():
@@ -106,6 +108,58 @@ def list_files():
 def download_file(filename):
     """Serve downloaded files"""
     return send_from_directory(Config.DOWNLOAD_DIR, filename, as_attachment=True)
+
+# Profile management endpoints
+
+@app.route('/api/profiles', methods=['GET'])
+def get_profiles():
+    """Get all saved profiles"""
+    result = profile_manager.get_all_profiles()
+    return jsonify(result)
+
+@app.route('/api/profiles/<profile_id>', methods=['GET'])
+def get_profile(profile_id):
+    """Get a specific profile"""
+    result = profile_manager.get_profile(profile_id)
+    if result['success']:
+        return jsonify(result)
+    else:
+        return jsonify(result), 404
+
+@app.route('/api/profiles', methods=['POST'])
+def save_profile():
+    """Save or update a profile"""
+    data = request.get_json()
+
+    name = data.get('name')
+    url = data.get('url')
+    download_dir = data.get('download_dir')
+
+    if not all([name, url, download_dir]):
+        return jsonify({'success': False, 'error': 'Name, URL, and download directory are required'}), 400
+
+    quality = data.get('quality', Config.DEFAULT_QUALITY)
+    subtitle = data.get('subtitle', Config.DEFAULT_SUBTITLE)
+    download_type = data.get('download_type', 'single')
+
+    result = profile_manager.save_profile(name, url, download_dir, quality, subtitle, download_type)
+    return jsonify(result)
+
+@app.route('/api/profiles/<profile_id>', methods=['DELETE'])
+def delete_profile(profile_id):
+    """Delete a profile"""
+    result = profile_manager.delete_profile(profile_id)
+    if result['success']:
+        return jsonify(result)
+    else:
+        return jsonify(result), 404
+
+@app.route('/api/profiles/search', methods=['GET'])
+def search_profiles():
+    """Search profiles by name"""
+    query = request.args.get('q', '')
+    result = profile_manager.search_profiles(query)
+    return jsonify(result)
 
 if __name__ == '__main__':
     print("=" * 60)
