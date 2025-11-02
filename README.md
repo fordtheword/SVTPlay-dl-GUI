@@ -30,9 +30,10 @@ Andra svenska streamingsajter som stöds av svtplay-dl:
 
 ### Förutsättningar
 
-1. **Python 3.8 eller senare**
+1. **Python 3.9 eller senare (rekommenderat: 3.12 eller 3.13)**
    - Ladda ner från [python.org](https://www.python.org/downloads/)
    - **VIKTIGT (Windows)**: Bocka i "Add Python to PATH" under installationen
+   - **OBS:** Python 3.8 fungerar INTE med moderna svtplay-dl-versioner
 
 2. **ffmpeg** (krävs för svtplay-dl)
    - **Windows**:
@@ -287,7 +288,20 @@ DEFAULT_SUBTITLE = True     # Ladda ner undertexter som standard
 
 ## Underhåll och uppdatering
 
-### Enkel uppgradering (Windows)
+### Webbaserad uppgradering (enklast!)
+
+**Öppna webbläsaren → Scrolla ner → Klicka "Uppgradera system"** 🎉
+
+Den webbaserade uppgraderingen:
+1. ✅ Visar nuvarande Python- och svtplay-dl-versioner
+2. ✅ Visar git branch och senaste commit
+3. ✅ Uppgraderar med ett klick direkt i webbläsaren
+4. ✅ Visar real-time progress och loggar
+5. ✅ Berättar om du behöver starta om servern
+
+**Perfekt för icke-tekniska användare!** Inget behov av terminal eller kommandon.
+
+### Uppgradering via skript (Windows)
 
 **Dubbelklicka på `upgrade.bat`** - det är allt! 🚀
 
