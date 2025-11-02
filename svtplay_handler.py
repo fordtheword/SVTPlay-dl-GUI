@@ -8,24 +8,32 @@ from datetime import datetime
 from config import Config
 
 # Get the path to svtplay-dl in the virtual environment
-def get_svtplay_dl_path():
-    """Get the correct path to svtplay-dl executable"""
+def get_svtplay_dl_command():
+    """Get the correct command to run svtplay-dl - returns a list"""
     # If running in a virtual environment, use that path
     if hasattr(sys, 'real_prefix') or (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix):
         # We're in a virtual environment
         venv_path = sys.prefix
         if os.name == 'nt':  # Windows
-            svtplay_path = os.path.join(venv_path, 'Scripts', 'svtplay-dl.exe')
+            svtplay_exe = os.path.join(venv_path, 'Scripts', 'svtplay-dl.exe')
+            # Check if .exe exists
+            if os.path.exists(svtplay_exe):
+                return [svtplay_exe]
+            # Fallback to Python module
+            python_exe = os.path.join(venv_path, 'Scripts', 'python.exe')
+            return [python_exe, '-m', 'svtplay_dl']
         else:  # Unix/Linux/Mac
             svtplay_path = os.path.join(venv_path, 'bin', 'svtplay-dl')
-
-        if os.path.exists(svtplay_path):
-            return svtplay_path
+            if os.path.exists(svtplay_path):
+                return [svtplay_path]
+            # Fallback to Python module
+            python_path = os.path.join(venv_path, 'bin', 'python')
+            return [python_path, '-m', 'svtplay_dl']
 
     # Fallback to just 'svtplay-dl' (will use PATH)
-    return 'svtplay-dl'
+    return ['svtplay-dl']
 
-SVTPLAY_DL_CMD = get_svtplay_dl_path()
+SVTPLAY_DL_CMD = get_svtplay_dl_command()
 
 class SVTPlayDownloader:
     """Handles downloads using svtplay-dl"""
@@ -39,7 +47,7 @@ class SVTPlayDownloader:
     def get_info(self, url):
         """Get information about a video or series without downloading"""
         try:
-            cmd = [SVTPLAY_DL_CMD, '--json-info', url]
+            cmd = SVTPLAY_DL_CMD + ['--json-info', url]
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
 
             if result.returncode == 0:
@@ -64,7 +72,7 @@ class SVTPlayDownloader:
     def list_episodes(self, url):
         """List all episodes from a series URL"""
         try:
-            cmd = [SVTPLAY_DL_CMD, '--list-episodes', url]
+            cmd = SVTPLAY_DL_CMD + ['--list-episodes', url]
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
 
             if result.returncode == 0:
@@ -126,7 +134,7 @@ class SVTPlayDownloader:
             os.makedirs(download_dir, exist_ok=True)
 
             # Build command
-            cmd = [SVTPLAY_DL_CMD]
+            cmd = SVTPLAY_DL_CMD.copy()
 
             # Add quality option
             quality = options.get('quality', Config.DEFAULT_QUALITY) if options else Config.DEFAULT_QUALITY
@@ -214,7 +222,7 @@ class SVTPlayDownloader:
             os.makedirs(download_dir, exist_ok=True)
 
             # Build command
-            cmd = [SVTPLAY_DL_CMD]
+            cmd = SVTPLAY_DL_CMD.copy()
 
             # Add all episodes flag
             cmd.append('--all-episodes')
