@@ -9,7 +9,7 @@ class Config:
     # Download directory
     DOWNLOAD_DIR = os.path.join(BASE_DIR, 'downloads')
 
-    # FFmpeg path (check local bin folder first)
+    # FFmpeg path (will be set during init)
     FFMPEG_PATH = None
 
     # Server configuration
@@ -29,18 +29,36 @@ class Config:
         """Initialize application directories and find ffmpeg"""
         os.makedirs(Config.DOWNLOAD_DIR, exist_ok=True)
 
-        # Check for local ffmpeg first (in bin folder)
+        # Try to use imageio-ffmpeg (installed via pip)
+        try:
+            from imageio_ffmpeg import get_ffmpeg_exe
+            Config.FFMPEG_PATH = get_ffmpeg_exe()
+            print(f"✓ Using imageio-ffmpeg: {Config.FFMPEG_PATH}")
+            return
+        except ImportError:
+            print("INFO: imageio-ffmpeg not installed")
+        except Exception as e:
+            print(f"INFO: Could not load imageio-ffmpeg: {e}")
+
+        # Fallback: Check for local ffmpeg in bin folder
         local_ffmpeg = os.path.join(Config.BASE_DIR, 'bin', 'ffmpeg.exe' if os.name == 'nt' else 'ffmpeg')
         if os.path.exists(local_ffmpeg):
             Config.FFMPEG_PATH = local_ffmpeg
-            print(f"Using local ffmpeg: {local_ffmpeg}")
-        else:
-            # Check if ffmpeg is in PATH
-            import subprocess
-            try:
-                subprocess.run(['ffmpeg', '-version'], capture_output=True, check=True)
-                Config.FFMPEG_PATH = 'ffmpeg'  # Use system ffmpeg
-                print("Using system ffmpeg from PATH")
-            except (subprocess.CalledProcessError, FileNotFoundError):
-                print("WARNING: ffmpeg not found. Ensure it's installed or in bin/ folder.")
-                Config.FFMPEG_PATH = 'ffmpeg'  # Fallback, will fail if not available
+            print(f"✓ Using local ffmpeg: {local_ffmpeg}")
+            return
+
+        # Fallback: Check if ffmpeg is in system PATH
+        import subprocess
+        try:
+            subprocess.run(['ffmpeg', '-version'], capture_output=True, check=True)
+            Config.FFMPEG_PATH = 'ffmpeg'
+            print("✓ Using system ffmpeg from PATH")
+            return
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            pass
+
+        # No ffmpeg found
+        print("⚠ WARNING: ffmpeg not found!")
+        print("  Install with: pip install imageio-ffmpeg")
+        print("  Or download manually to bin/ folder")
+        Config.FFMPEG_PATH = 'ffmpeg'  # Fallback, may not work

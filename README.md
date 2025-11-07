@@ -42,14 +42,13 @@ Ett webbaserat grafiskt gränssnitt för [svtplay-dl](https://svtplay-dl.se/), v
 
 **Steg 3:** Kör automatisk installation
    - Dubbelklicka på **`install.bat`**
-   - Välj **[A]** för att ladda ner ffmpeg automatiskt (Rekommenderat)
-   - Vänta tills installationen är klar
+   - Vänta tills installationen är klar (tar 1-2 minuter)
 
 **Steg 4:** Starta programmet
    - Dubbelklicka på **`start.bat`**
    - Öppna webbläsare: **http://localhost:5000**
 
-**Klart!** Ingen PATH-konfiguration eller manuell ffmpeg-installation behövs! 🎉
+**Klart!** FFmpeg installeras automatiskt via pip - inga problem! 🎉
 
 ---
 
@@ -66,88 +65,38 @@ Ett webbaserat grafiskt gränssnitt för [svtplay-dl](https://svtplay-dl.se/), v
    - **Linux**: `sudo apt install python3 python3-pip` (Debian/Ubuntu)
 
 2. **ffmpeg** (krävs för video-konvertering)
-   - **Windows**: Laddar ner automatiskt via `install.bat` ELLER manuellt från [ffmpeg.org](https://ffmpeg.org/)
-   - **macOS**: `brew install ffmpeg`
-   - **Linux**: `sudo apt install ffmpeg`
+   - **Installeras automatiskt** via pip-paketet `imageio-ffmpeg` när du kör `pip install -r requirements.txt`
+   - **Alternativt** kan du installera manuellt:
+     - **macOS**: `brew install ffmpeg`
+     - **Linux**: `sudo apt install ffmpeg`
 
 #### Steg-för-steg installation
 
-**För Python:**
-1. Om du glömde bocka i "Add Python to PATH" under installationen:
-   - Öppna "Redigera systemets miljövariabler" (sök i Start-menyn)
-   - Klicka på "Miljövariabler..." längst ner
-   - Under "Systemvariabler", hitta "Path" och klicka "Redigera"
-   - Klicka "Ny" och lägg till (ersätt med din Python-sökväg):
-     - `C:\Users\[DITT ANVÄNDARNAMN]\AppData\Local\Programs\Python\Python311`
-     - `C:\Users\[DITT ANVÄNDARNAMN]\AppData\Local\Programs\Python\Python311\Scripts`
-   - Klicka "OK" på alla fönster
-   - **Starta om terminalen** för att ändringarna ska träda i kraft
+**För Python (om du glömde "Add to PATH"):**
 
-2. Testa att det fungerar:
-   ```cmd
-   python --version
-   ```
+Om du glömde bocka i "Add Python to PATH" under installationen:
 
-**För FFmpeg:**
-1. Om du installerade manuellt (inte via Chocolatey/Scoop):
-   - Packa upp FFmpeg till en mapp, t.ex. `C:\ffmpeg`
-   - Öppna "Redigera systemets miljövariabler"
-   - Klicka på "Miljövariabler..."
-   - Under "Systemvariabler", hitta "Path" och klicka "Redigera"
-   - Klicka "Ny" och lägg till: `C:\ffmpeg\bin`
-   - Klicka "OK" på alla fönster
-   - **Starta om terminalen**
+**Windows:**
+1. Öppna "Redigera systemets miljövariabler" (sök i Start-menyn)
+2. Klicka på "Miljövariabler..." längst ner
+3. Under "Systemvariabler", hitta "Path" och klicka "Redigera"
+4. Klicka "Ny" och lägg till (ersätt med din Python-sökväg):
+   - `C:\Users\[DITT ANVÄNDARNAMN]\AppData\Local\Programs\Python\Python311`
+   - `C:\Users\[DITT ANVÄNDARNAMN]\AppData\Local\Programs\Python\Python311\Scripts`
+5. Klicka "OK" på alla fönster och starta om terminalen
 
-2. Testa att det fungerar:
-   ```cmd
-   ffmpeg -version
-   ```
+**macOS/Linux:**
+PATH hanteras vanligtvis automatiskt. Om något inte fungerar, lägg till i `.zshrc` eller `.bashrc`:
+```bash
+export PATH="/usr/local/bin:$PATH"
+```
 
-**Om du använder Chocolatey eller Scoop** läggs allt automatiskt till i PATH!
+**Testa att Python fungerar:**
+```bash
+python --version
+```
 
-#### macOS
-
-PATH hanteras vanligtvis automatiskt på macOS när du använder Homebrew. Om något inte fungerar:
-
-1. Öppna Terminal
-2. Redigera din shell-konfiguration:
-   ```bash
-   nano ~/.zshrc   # För nyare macOS (Catalina+)
-   # eller
-   nano ~/.bash_profile   # För äldre macOS
-   ```
-
-3. Lägg till (om Python/FFmpeg installerades på annan plats):
-   ```bash
-   export PATH="/usr/local/bin:$PATH"
-   ```
-
-4. Spara och ladda om:
-   ```bash
-   source ~/.zshrc
-   ```
-
-#### Linux
-
-PATH hanteras vanligtvis automatiskt när du använder `apt`, `dnf` eller andra pakethanterare. Om något inte fungerar:
-
-1. Öppna Terminal
-2. Redigera `.bashrc`:
-   ```bash
-   nano ~/.bashrc
-   ```
-
-3. Lägg till i slutet:
-   ```bash
-   export PATH="/usr/local/bin:$PATH"
-   ```
-
-4. Spara och ladda om:
-   ```bash
-   source ~/.bashrc
-   ```
-
-### Steg-för-steg installation
+#### Installation av projektet
 
 1. **Ladda ner projektet**
    ```bash
@@ -184,10 +133,12 @@ PATH hanteras vanligtvis automatiskt när du använder `apt`, `dnf` eller andra 
 
 4. **Installera beroenden**
 
-   Detta installerar Flask, svtplay-dl och alla andra nödvändiga paket:
+   Detta installerar Flask, svtplay-dl, FFmpeg och alla andra nödvändiga paket:
    ```bash
    pip install -r requirements.txt
    ```
+
+   **FFmpeg installeras automatiskt** via `imageio-ffmpeg` - ingen manuell konfiguration behövs!
 
 5. **Starta servern**
 
@@ -436,10 +387,13 @@ För att andra datorer ska kunna komma åt servern:
 - **macOS/Linux**: Installera via pakethanterare eller python.org
 
 ### "ffmpeg hittades inte"
-- Kontrollera att ffmpeg är installerat: `ffmpeg -version`
-- **Windows**: Se till att ffmpeg finns i PATH, eller installera via Chocolatey/Scoop
-- **macOS**: `brew install ffmpeg`
-- **Linux**: `sudo apt install ffmpeg` eller `sudo dnf install ffmpeg`
+- FFmpeg borde installeras automatiskt via `pip install -r requirements.txt` (imageio-ffmpeg)
+- Om problemet kvarstår:
+  - Kontrollera att `imageio-ffmpeg` är installerat: `pip list | grep imageio`
+  - Försök installera manuellt: `pip install imageio-ffmpeg`
+  - **Alternativt**, installera systemets ffmpeg:
+    - **macOS**: `brew install ffmpeg`
+    - **Linux**: `sudo apt install ffmpeg` eller `sudo dnf install ffmpeg`
 
 ### "Kan inte aktivera virtuell miljö" (PowerShell)
 - Kör: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser`
