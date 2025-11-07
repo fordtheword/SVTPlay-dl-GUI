@@ -30,31 +30,47 @@ Ett webbaserat grafiskt gränssnitt för [svtplay-dl](https://svtplay-dl.se/), v
 
 ## Installation
 
-### Förutsättningar
+### Enkel installation (Windows - Rekommenderat)
 
-1. **Python 3.9 eller senare (rekommenderat: 3.12 eller 3.13)**
+**Steg 1:** Installera Python 3.9+
    - Ladda ner från [python.org](https://www.python.org/downloads/)
-   - **VIKTIGT (Windows)**: Bocka i "Add Python to PATH" under installationen
-   - **OBS:** Python 3.8 fungerar INTE med moderna svtplay-dl-versioner
+   - **VIKTIGT**: Bocka i **"Add Python to PATH"** under installationen!
 
-2. **ffmpeg** (krävs för svtplay-dl)
-   - **Windows**:
-     - Ladda ner från [ffmpeg.org](https://ffmpeg.org/download.html#build-windows)
-     - Eller använd [Chocolatey](https://chocolatey.org/): `choco install ffmpeg`
-     - Eller använd [Scoop](https://scoop.sh/): `scoop install ffmpeg`
+**Steg 2:** Ladda ner projektet
+   - Klicka på "Code" → "Download ZIP" på GitHub
+   - Packa upp ZIP-filen
+
+**Steg 3:** Kör automatisk installation
+   - Dubbelklicka på **`install.bat`**
+   - Välj **[A]** för att ladda ner ffmpeg automatiskt (Rekommenderat)
+   - Vänta tills installationen är klar
+
+**Steg 4:** Starta programmet
+   - Dubbelklicka på **`start.bat`**
+   - Öppna webbläsare: **http://localhost:5000**
+
+**Klart!** Ingen PATH-konfiguration eller manuell ffmpeg-installation behövs! 🎉
+
+---
+
+### Manuell installation (alla plattformar)
+
+<details>
+<summary><strong>Klicka här för manuell installationsguide</strong></summary>
+
+#### Förutsättningar
+
+1. **Python 3.9 eller senare** (rekommenderat: 3.12+)
+   - **Windows**: [python.org](https://www.python.org/downloads/) - Bocka i "Add Python to PATH"
+   - **macOS**: `brew install python3`
+   - **Linux**: `sudo apt install python3 python3-pip` (Debian/Ubuntu)
+
+2. **ffmpeg** (krävs för video-konvertering)
+   - **Windows**: Laddar ner automatiskt via `install.bat` ELLER manuellt från [ffmpeg.org](https://ffmpeg.org/)
    - **macOS**: `brew install ffmpeg`
-   - **Linux**: `sudo apt install ffmpeg` (Debian/Ubuntu) eller `sudo dnf install ffmpeg` (Fedora)
+   - **Linux**: `sudo apt install ffmpeg`
 
-3. **Windows Terminal (rekommenderat för Windows-användare)**
-   - Moderna kommandotolk med bättre support för Python
-   - Installera från [Microsoft Store](https://aka.ms/terminal) eller `winget install Microsoft.WindowsTerminal`
-   - Alternativt kan du använda PowerShell eller CMD (äldre)
-
-### Lägg till Python och FFmpeg i PATH
-
-För att kunna köra `python` och `ffmpeg` från kommandoraden måste de finnas i din systems PATH.
-
-#### Windows
+#### Steg-för-steg installation
 
 **För Python:**
 1. Om du glömde bocka i "Add Python to PATH" under installationen:
