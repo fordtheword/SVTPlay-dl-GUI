@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('deleteProfileBtn').addEventListener('click', deleteProfile);
     document.getElementById('profileSelect').addEventListener('change', loadProfileData);
     document.getElementById('upgradeBtn').addEventListener('click', upgradeSystem);
+    document.getElementById('restartBtn').addEventListener('click', restartServer);
 
     // Load system info
     loadSystemInfo();
@@ -625,8 +626,15 @@ async function upgradeSystem() {
             upgradeDetails.textContent = details;
 
             if (result.restart_required) {
-                upgradeAlert.textContent += '\n\nVIKTIGT: Starta om servern för att använda de nya uppdateringarna!';
-                showNotification('Uppgradering klar! Starta om servern.', 'warning');
+                upgradeAlert.textContent += '\n\nVIKTIGT: Nya uppdateringar installerade!';
+
+                // Show restart prompt with button
+                if (confirm('Uppgradering klar! Vill du starta om servern nu för att använda de nya uppdateringarna?')) {
+                    // Call restart function
+                    restartServer();
+                } else {
+                    showNotification('Uppgradering klar! Kom ihåg att starta om servern när du är redo.', 'warning');
+                }
             } else {
                 showNotification('Systemet är redan uppdaterat!', 'success');
             }
@@ -657,6 +665,74 @@ async function upgradeSystem() {
         // Re-enable button
         upgradeBtn.disabled = false;
         upgradeBtn.innerHTML = '<i class="bi bi-arrow-up-circle"></i> Uppgradera system';
+    }
+}
+
+// Restart server
+async function restartServer() {
+    const restartBtn = document.getElementById('restartBtn');
+
+    // Confirm restart
+    if (!confirm('Är du säker på att du vill starta om servern? Alla pågående nedladdningar kommer att fortsätta i bakgrunden.')) {
+        return;
+    }
+
+    try {
+        // Disable button and show loading
+        restartBtn.disabled = true;
+        restartBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Startar om...';
+
+        const response = await fetch('/api/system/restart', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showNotification('Server startas om... Sidan kommer att laddas om om några sekunder.', 'success');
+
+            // Wait a bit, then try to reconnect
+            setTimeout(() => {
+                // Try to reload the page - server should be back up
+                let attempts = 0;
+                const maxAttempts = 20;
+
+                const checkServer = setInterval(async () => {
+                    attempts++;
+                    try {
+                        const healthCheck = await fetch('/api/system/info');
+                        if (healthCheck.ok) {
+                            clearInterval(checkServer);
+                            showNotification('Servern är igång igen! Laddar om sidan...', 'success');
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1000);
+                        }
+                    } catch (e) {
+                        // Server not ready yet
+                        if (attempts >= maxAttempts) {
+                            clearInterval(checkServer);
+                            showNotification('Servern tar längre tid än förväntat. Ladda om sidan manuellt.', 'warning');
+                            restartBtn.disabled = false;
+                            restartBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Starta om server';
+                        }
+                    }
+                }, 1000);
+            }, 2000);
+        } else {
+            showNotification('Omstart misslyckades: ' + result.error, 'danger');
+            restartBtn.disabled = false;
+            restartBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Starta om server';
+        }
+    } catch (error) {
+        showNotification('Fel vid omstart: ' + error.message, 'danger');
+        // Server might be restarting, wait and try to reload
+        setTimeout(() => {
+            window.location.reload();
+        }, 3000);
     }
 }
 

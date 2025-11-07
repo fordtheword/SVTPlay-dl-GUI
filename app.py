@@ -222,6 +222,43 @@ def upgrade_system():
             'error': str(e)
         }), 500
 
+@app.route('/api/system/restart', methods=['POST'])
+def restart_server():
+    """Restart the Flask server"""
+    try:
+        import os
+        import signal
+        import threading
+
+        def do_restart():
+            """Perform the restart after a short delay"""
+            import time
+            time.sleep(1)  # Give time for response to be sent
+
+            # On Windows, we need to restart differently
+            if os.name == 'nt':
+                # Use os.execv to replace the current process
+                os.execv(sys.executable, [sys.executable] + sys.argv)
+            else:
+                # On Unix-like systems, send SIGHUP or restart
+                os.execv(sys.executable, [sys.executable] + sys.argv)
+
+        # Start restart in background thread
+        thread = threading.Thread(target=do_restart)
+        thread.daemon = True
+        thread.start()
+
+        return jsonify({
+            'success': True,
+            'message': 'Server is restarting...'
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 @app.route('/api/system/info', methods=['GET'])
 def get_system_info():
     """Get system information"""
