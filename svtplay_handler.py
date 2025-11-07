@@ -4,6 +4,7 @@ import os
 import sys
 import threading
 import queue
+import re
 from datetime import datetime
 from config import Config
 
@@ -90,6 +91,106 @@ class SVTPlayDownloader:
                 return {'success': False, 'error': result.stderr or 'Failed to list episodes'}
         except Exception as e:
             return {'success': False, 'error': str(e)}
+
+    def _process_output_realtime(self, process, download_id):
+        """
+        Process svtplay-dl output in real-time and update download status.
+        Parses episode information and tracks progress.
+        Returns: (stdout_lines, stderr_lines, full_output)
+        """
+        stdout_lines = []
+        stderr_lines = []
+
+        # Regular expressions for parsing
+        episode_pattern = re.compile(r'Episode\s+(\d+)\s+of\s+(\d+)', re.IGNORECASE)
+        url_pattern = re.compile(r'Url:\s+(https?://[^\s]+)', re.IGNORECASE)
+        outfile_pattern = re.compile(r'Outfile:\s+(.+)', re.IGNORECASE)
+        exists_pattern = re.compile(r'already exists', re.IGNORECASE)
+        downloading_pattern = re.compile(r'downloading', re.IGNORECASE)
+
+        current_episode = None
+        episodes = {}  # Store episode data
+
+        # Read stderr in real-time (svtplay-dl writes most info to stderr)
+        for line in iter(process.stderr.readline, ''):
+            if not line:
+                break
+
+            line = line.strip()
+            stderr_lines.append(line)
+
+            # Parse episode number
+            episode_match = episode_pattern.search(line)
+            if episode_match:
+                ep_num = int(episode_match.group(1))
+                total = int(episode_match.group(2))
+                current_episode = ep_num
+
+                # Initialize episode entry
+                if ep_num not in episodes:
+                    episodes[ep_num] = {
+                        'number': ep_num,
+                        'total': total,
+                        'status': 'processing',
+                        'url': None,
+                        'filename': None,
+                        'skipped': False
+                    }
+
+                # Update download object with episodes list
+                if 'episodes' not in self.downloads[download_id]:
+                    self.downloads[download_id]['episodes'] = {}
+                    self.downloads[download_id]['total_episodes'] = total
+                    self.downloads[download_id]['completed_episodes'] = 0
+                    self.downloads[download_id]['skipped_episodes'] = 0
+
+                self.downloads[download_id]['episodes'][ep_num] = episodes[ep_num]
+                self.downloads[download_id]['current_episode'] = ep_num
+                self.downloads[download_id]['message'] = f'Processing episode {ep_num} of {total}'
+
+            # Parse URL
+            if current_episode and url_pattern.search(line):
+                url_match = url_pattern.search(line)
+                episodes[current_episode]['url'] = url_match.group(1)
+                self.downloads[download_id]['episodes'][current_episode] = episodes[current_episode]
+
+            # Parse outfile
+            if current_episode and outfile_pattern.search(line):
+                outfile_match = outfile_pattern.search(line)
+                episodes[current_episode]['filename'] = outfile_match.group(1)
+                self.downloads[download_id]['episodes'][current_episode] = episodes[current_episode]
+
+            # Check if file already exists
+            if current_episode and exists_pattern.search(line):
+                episodes[current_episode]['status'] = 'skipped'
+                episodes[current_episode]['skipped'] = True
+                self.downloads[download_id]['episodes'][current_episode] = episodes[current_episode]
+                self.downloads[download_id]['skipped_episodes'] = self.downloads[download_id].get('skipped_episodes', 0) + 1
+
+            # Check if downloading
+            if current_episode and downloading_pattern.search(line):
+                episodes[current_episode]['status'] = 'downloading'
+                self.downloads[download_id]['episodes'][current_episode] = episodes[current_episode]
+
+        # Mark episodes as completed if they were being downloaded
+        for ep_num, ep_data in episodes.items():
+            if ep_data['status'] == 'downloading':
+                ep_data['status'] = 'completed'
+                self.downloads[download_id]['episodes'][ep_num] = ep_data
+                self.downloads[download_id]['completed_episodes'] = self.downloads[download_id].get('completed_episodes', 0) + 1
+
+        # Read any remaining stdout
+        stdout_text = process.stdout.read()
+        if stdout_text:
+            stdout_lines = stdout_text.strip().split('\n')
+
+        # Wait for process to finish
+        process.wait()
+
+        # Combine outputs
+        full_output = '\n'.join(stdout_lines) + '\n' + '\n'.join(stderr_lines)
+
+        return stdout_lines, stderr_lines, full_output
 
     def start_download(self, url, options=None):
         """Start a download task"""
@@ -314,22 +415,24 @@ class SVTPlayDownloader:
                 cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                text=True
+                text=True,
+                bufsize=1  # Line buffered for real-time reading
             )
 
-            # Read output
-            stdout, stderr = process.communicate()
+            # Process output in real-time and update episode status
+            stdout_lines, stderr_lines, full_output = self._process_output_realtime(process, download_id)
 
-            # Debug: Print output
+            # Debug: Print summary
             print("=" * 80)
             print("DEBUG: svtplay-dl output (season download):")
-            print("STDOUT:", stdout[:1000] if stdout else "(empty)")
-            print("STDERR:", stderr[:1000] if stderr else "(empty)")
+            stderr_preview = '\n'.join(stderr_lines[:20]) if stderr_lines else "(empty)"
+            print("STDERR (first 20 lines):", stderr_preview)
             print("Return code:", process.returncode)
+            if 'total_episodes' in self.downloads[download_id]:
+                print(f"Episodes processed: {self.downloads[download_id].get('total_episodes', 0)}")
+                print(f"Completed: {self.downloads[download_id].get('completed_episodes', 0)}")
+                print(f"Skipped: {self.downloads[download_id].get('skipped_episodes', 0)}")
             print("=" * 80)
-
-            # Combine stdout and stderr for better error detection
-            full_output = (stdout or '') + '\n' + (stderr or '')
 
             # Check for specific error conditions
             token_required = 'token' in full_output.lower() and ('need' in full_output.lower() or 'require' in full_output.lower())
@@ -341,7 +444,17 @@ class SVTPlayDownloader:
 
             if success:
                 self.downloads[download_id]['status'] = 'completed'
-                self.downloads[download_id]['message'] = 'Season download completed'
+
+                # Create summary message
+                total = self.downloads[download_id].get('total_episodes', 0)
+                completed = self.downloads[download_id].get('completed_episodes', 0)
+                skipped = self.downloads[download_id].get('skipped_episodes', 0)
+
+                if total > 0:
+                    self.downloads[download_id]['message'] = f'Season download completed: {completed} downloaded, {skipped} skipped (already existed)'
+                else:
+                    self.downloads[download_id]['message'] = 'Season download completed'
+
                 self.downloads[download_id]['progress'] = 100
                 self.downloads[download_id]['finished_at'] = datetime.now().isoformat()
             else:

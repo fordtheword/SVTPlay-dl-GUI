@@ -226,6 +226,56 @@ function displayDownloads(downloads) {
                 ` : ''}
 
                 <small class="text-muted">${download.message}</small>
+
+                ${download.episodes && Object.keys(download.episodes).length > 0 ? `
+                    <div class="mt-3">
+                        <details ${download.status === 'downloading' ? 'open' : ''}>
+                            <summary style="cursor: pointer;" class="mb-2">
+                                <i class="bi bi-list-ol"></i>
+                                <strong>Avsnitt (${download.total_episodes || Object.keys(download.episodes).length})</strong>
+                                ${download.total_episodes ? `
+                                    - ${download.completed_episodes || 0} nedladdade,
+                                    ${download.skipped_episodes || 0} hoppade över
+                                ` : ''}
+                            </summary>
+                            <div class="episode-list" style="max-height: 300px; overflow-y: auto;">
+                                ${Object.values(download.episodes)
+                                    .sort((a, b) => a.number - b.number)
+                                    .map(ep => {
+                                        let icon, className, statusText;
+                                        if (ep.status === 'completed') {
+                                            icon = '✅';
+                                            className = 'text-success';
+                                            statusText = 'Nedladdad';
+                                        } else if (ep.status === 'skipped') {
+                                            icon = '⏭️';
+                                            className = 'text-info';
+                                            statusText = 'Hoppade över (fanns redan)';
+                                        } else if (ep.status === 'downloading') {
+                                            icon = '⏳';
+                                            className = 'text-warning';
+                                            statusText = 'Laddar ner...';
+                                        } else {
+                                            icon = '⏸️';
+                                            className = 'text-muted';
+                                            statusText = 'Väntar...';
+                                        }
+
+                                        return `
+                                            <div class="d-flex align-items-center py-1 px-2 border-bottom" style="font-size: 0.9rem;">
+                                                <span class="me-2">${icon}</span>
+                                                <span class="flex-grow-1">
+                                                    <strong>Avsnitt ${ep.number}</strong>
+                                                    ${ep.filename ? `<br><small class="text-muted">${ep.filename.substring(0, 50)}${ep.filename.length > 50 ? '...' : ''}</small>` : ''}
+                                                </span>
+                                                <small class="${className}">${statusText}</small>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                            </div>
+                        </details>
+                    </div>
+                ` : ''}
             </div>
         `;
     });
