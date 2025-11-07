@@ -18,6 +18,9 @@ downloads/
 *.mkv
 *.srt
 
+# Local binaries (ffmpeg)
+bin/
+
 # IDE
 .vscode/
 .idea/

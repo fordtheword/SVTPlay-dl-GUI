@@ -36,6 +36,22 @@ def get_svtplay_dl_command():
 
 SVTPLAY_DL_CMD = get_svtplay_dl_command()
 
+def get_env_with_local_bin():
+    """Get environment variables with bin/ folder added to PATH for ffmpeg"""
+    env = os.environ.copy()
+
+    # Add local bin folder to PATH (for local ffmpeg)
+    bin_path = os.path.join(Config.BASE_DIR, 'bin')
+    if os.path.exists(bin_path):
+        if os.name == 'nt':
+            # Windows: PATH separator is ;
+            env['PATH'] = bin_path + os.pathsep + env.get('PATH', '')
+        else:
+            # Unix/Linux/Mac: PATH separator is :
+            env['PATH'] = bin_path + os.pathsep + env.get('PATH', '')
+
+    return env
+
 class SVTPlayDownloader:
     """Handles downloads using svtplay-dl"""
 
@@ -270,12 +286,13 @@ class SVTPlayDownloader:
             print(" ".join(cmd))
             print("=" * 80)
 
-            # Run download
+            # Run download with local ffmpeg in PATH
             process = subprocess.Popen(
                 cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                text=True
+                text=True,
+                env=get_env_with_local_bin()  # Add bin/ to PATH for local ffmpeg
             )
 
             # Read output
@@ -410,13 +427,14 @@ class SVTPlayDownloader:
             print(" ".join(cmd))
             print("=" * 80)
 
-            # Run download
+            # Run download with local ffmpeg in PATH
             process = subprocess.Popen(
                 cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
-                bufsize=1  # Line buffered for real-time reading
+                bufsize=1,  # Line buffered for real-time reading
+                env=get_env_with_local_bin()  # Add bin/ to PATH for local ffmpeg
             )
 
             # Process output in real-time and update episode status
