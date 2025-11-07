@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from flask_cors import CORS
 import os
+import sys
 from config import Config
 from svtplay_handler import SVTPlayDownloader
 from profile_manager import ProfileManager
