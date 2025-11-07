@@ -155,6 +155,12 @@ class SVTPlayDownloader:
             # Add URL
             cmd.append(url)
 
+            # Debug: Print the command being run
+            print("=" * 80)
+            print("DEBUG: Running svtplay-dl command (single download):")
+            print(" ".join(cmd))
+            print("=" * 80)
+
             # Run download
             process = subprocess.Popen(
                 cmd,
@@ -165,6 +171,14 @@ class SVTPlayDownloader:
 
             # Read output
             stdout, stderr = process.communicate()
+
+            # Debug: Print output
+            print("=" * 80)
+            print("DEBUG: svtplay-dl output (single download):")
+            print("STDOUT:", stdout[:1000] if stdout else "(empty)")
+            print("STDERR:", stderr[:1000] if stderr else "(empty)")
+            print("Return code:", process.returncode)
+            print("=" * 80)
 
             # Combine stdout and stderr for better error detection
             full_output = (stdout or '') + '\n' + (stderr or '')
@@ -273,6 +287,12 @@ class SVTPlayDownloader:
             # Add URL
             cmd.append(url)
 
+            # Debug: Print the command being run
+            print("=" * 80)
+            print("DEBUG: Running svtplay-dl command (season download):")
+            print(" ".join(cmd))
+            print("=" * 80)
+
             # Run download
             process = subprocess.Popen(
                 cmd,
@@ -283,6 +303,14 @@ class SVTPlayDownloader:
 
             # Read output
             stdout, stderr = process.communicate()
+
+            # Debug: Print output
+            print("=" * 80)
+            print("DEBUG: svtplay-dl output (season download):")
+            print("STDOUT:", stdout[:1000] if stdout else "(empty)")
+            print("STDERR:", stderr[:1000] if stderr else "(empty)")
+            print("Return code:", process.returncode)
+            print("=" * 80)
 
             # Combine stdout and stderr for better error detection
             full_output = (stdout or '') + '\n' + (stderr or '')
