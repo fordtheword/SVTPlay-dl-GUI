@@ -1,15 +1,17 @@
 # SVTPlay-dl Web GUI
 
-Ett webbaserat grafiskt gränssnitt för [svtplay-dl](https://svtplay-dl.se/), verktyget för att ladda ner videos från svenska streamingsajter.
+Ett webbaserat grafiskt gränssnitt för [svtplay-dl](https://svtplay-dl.se/), verktyget för att ladda ner videos från svenska streamingsajter som **SVT Play** och **TV4 Play**.
 
 ## Funktioner
 
 - 📺 Ladda ner enskilda TV-program
 - 📦 Ladda ner hela säsonger automatiskt
-- 💾 **Anpassade nedladdningsmappar** - Välj var dina filer ska sparas
+- 🎯 **Realtidsspårning av avsnitt** - Se exakt vilka avsnitt som laddas ner och vilka som hoppas över
+- 🔑 **TV4 Play-stöd** - Fullständigt stöd med token-autentisering och enkla instruktioner
+- 💾 **Anpassade nedladdningsmappar** - Välj var dina filer ska sparas med inbyggd mappbläddrare
 - 📑 **Sparade profiler** - Spara inställningar för återkommande nedladdningar (perfekt för veckovisa program)
 - 🌐 Webbaserat gränssnitt tillgängligt från alla datorer i nätverket
-- 📊 Realtidsuppdatering av nedladdningsstatus
+- 📊 Realtidsuppdatering av nedladdningsstatus med detaljerad episodinformation
 - 🎬 Kvalitetsval (1080p, 720p, 480p eller bästa tillgängliga)
 - 💬 Automatisk nedladdning av undertexter
 - 📁 Automatisk organisering i undermappar per serie
@@ -17,11 +19,11 @@ Ett webbaserat grafiskt gränssnitt för [svtplay-dl](https://svtplay-dl.se/), v
 
 ## Supporterade sajter
 
-Primärt fokus på:
-- SVT Play (svtplay.se)
+**Primärt fokus och fullt stöd:**
+- **SVT Play** (svtplay.se)
+- **TV4 Play** (tv4play.se) - Med token-autentisering för premium-innehåll
 
-Andra svenska streamingsajter som stöds av svtplay-dl:
-- TV4 Play
+**Andra svenska streamingsajter som stöds av svtplay-dl:**
 - Viafree
 - Dplay
 - och många fler...
@@ -192,25 +194,26 @@ PATH hanteras vanligtvis automatiskt när du använder `apt`, `dnf` eller andra 
 
 ## Användning
 
-### Snabbstart: Ladda ner ett enskilt program
+### Snabbstart: Ladda ner från SVT Play
 
 1. Gå till SVT Play och hitta programmet du vill ladda ner
 2. Kopiera URL:en från adressfältet
 3. Klistra in URL:en i "Video-URL" fältet
 4. (Valfritt) Ange en anpassad nedladdningsmapp, t.ex. `D:\TV-Serier`
-5. Välj "Enskilt avsnitt"
+5. Välj "Enskilt avsnitt" eller "Hela säsongen"
 6. Välj önskad kvalitet
 7. Klicka på "Starta nedladdning"
 
-### Ladda ner en hel säsong
+### Snabbstart: Ladda ner från TV4 Play
 
-1. Gå till SVT Play och hitta serien
-2. Kopiera URL:en (kan vara från vilket avsnitt som helst i serien)
-3. Klistra in URL:en i "Video-URL" fältet
-4. (Valfritt) Ange nedladdningsmapp
-5. Välj "Hela säsongen"
-6. Välj önskad kvalitet
+1. **Hämta token först** (se [TV4 Play-instruktioner](#tv4-play-och-premium-innehåll) nedan)
+2. Gå till TV4 Play och hitta programmet (t.ex. "Bäst i test")
+3. Kopiera URL:en (använd programsidan för hela säsongen: `https://www.tv4play.se/program/bast-i-test`)
+4. Klistra in URL:en i "Video-URL" fältet
+5. Klistra in din **token** i "Token"-fältet
+6. Välj "Hela säsongen" för att få alla avsnitt
 7. Klicka på "Starta nedladdning"
+8. **Se realtidsstatus** - Listan visar vilka avsnitt som laddas ner (✅) och vilka som hoppas över (⏭️)
 
 ### Använda sparade profiler (för återkommande nedladdningar)
 
