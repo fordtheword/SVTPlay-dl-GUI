@@ -136,9 +136,17 @@ class SVTPlayDownloader:
             # Build command
             cmd = SVTPLAY_DL_CMD.copy()
 
-            # Add quality option
+            # Add quality option - fix format for TV4 Play compatibility
             quality = options.get('quality', Config.DEFAULT_QUALITY) if options else Config.DEFAULT_QUALITY
-            cmd.extend(['-q', quality])
+
+            # TV4 Play doesn't accept "p" suffix (e.g., "480p"), only numbers or "best"
+            # Remove "p" suffix if present
+            if quality and quality != 'best':
+                quality = quality.replace('p', '')
+
+            # Only add quality parameter if not "best" - let svtplay-dl choose automatically for best
+            if quality and quality != 'best':
+                cmd.extend(['-q', quality])
 
             # Add subtitle option
             if options and options.get('subtitle', Config.DEFAULT_SUBTITLE):
@@ -269,9 +277,17 @@ class SVTPlayDownloader:
             # Add all episodes flag
             cmd.append('--all-episodes')
 
-            # Add quality option
+            # Add quality option - fix format for TV4 Play compatibility
             quality = options.get('quality', Config.DEFAULT_QUALITY) if options else Config.DEFAULT_QUALITY
-            cmd.extend(['-q', quality])
+
+            # TV4 Play doesn't accept "p" suffix (e.g., "480p"), only numbers or "best"
+            # Remove "p" suffix if present
+            if quality and quality != 'best':
+                quality = quality.replace('p', '')
+
+            # Only add quality parameter if not "best" - let svtplay-dl choose automatically for best
+            if quality and quality != 'best':
+                cmd.extend(['-q', quality])
 
             # Add subtitle option
             if options and options.get('subtitle', Config.DEFAULT_SUBTITLE):
