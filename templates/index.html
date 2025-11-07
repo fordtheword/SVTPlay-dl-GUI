@@ -83,14 +83,32 @@
                         <div class="collapse mt-2" id="tokenInstructions">
                             <div class="card card-body bg-light">
                                 <h6><i class="bi bi-info-circle"></i> Så hittar du token för TV4 Play:</h6>
-                                <ol class="small mb-0">
-                                    <li>Öppna <a href="https://www.tv4play.se/" target="_blank">TV4 Play</a> i en ny flik och logga in</li>
-                                    <li>Tryck <kbd>F12</kbd> för att öppna Developer Tools</li>
-                                    <li>Gå till fliken <strong>"Application"</strong> (Chrome) eller <strong>"Storage"</strong> (Firefox)</li>
-                                    <li>Välj <strong>"Cookies"</strong> → <strong>"https://www.tv4play.se"</strong></li>
-                                    <li>Hitta cookie som heter <code>token</code>, <code>jwt</code> eller <code>vimond_token</code></li>
-                                    <li>Kopiera värdet och klistra in ovan</li>
-                                </ol>
+
+                                <div class="alert alert-success small mb-3">
+                                    <strong>Enklaste metoden (rekommenderas):</strong>
+                                    <ol class="mb-0 mt-2">
+                                        <li>Öppna <a href="https://www.tv4play.se/" target="_blank">TV4 Play</a> och logga in</li>
+                                        <li>Tryck <kbd>F12</kbd> för att öppna Developer Tools</li>
+                                        <li>Gå till fliken <strong>"Console"</strong></li>
+                                        <li>Klistra in följande kod och tryck Enter:
+                                            <pre class="bg-dark text-light p-2 mt-1 mb-1" style="font-size: 0.75rem;">document.cookie.split("; ").find((row) => row.startsWith("tv4-refresh-token="))?.split("=")[1];</pre>
+                                        </li>
+                                        <li>Kopiera den text som visas (utan citattecken) och klistra in ovan</li>
+                                    </ol>
+                                </div>
+
+                                <details class="small">
+                                    <summary class="text-muted" style="cursor: pointer;">Alternativ metod (manuell sökning)</summary>
+                                    <ol class="mt-2 mb-0">
+                                        <li>Öppna <a href="https://www.tv4play.se/" target="_blank">TV4 Play</a> och logga in</li>
+                                        <li>Tryck <kbd>F12</kbd> för att öppna Developer Tools</li>
+                                        <li>Gå till fliken <strong>"Application"</strong> (Chrome) eller <strong>"Storage"</strong> (Firefox)</li>
+                                        <li>Välj <strong>"Cookies"</strong> → <strong>"https://www.tv4play.se"</strong></li>
+                                        <li>Hitta cookie som heter exakt <code>tv4-refresh-token</code></li>
+                                        <li>Kopiera värdet (börjar ofta med "ey...") och klistra in ovan</li>
+                                    </ol>
+                                </details>
+
                                 <p class="small text-muted mb-0 mt-2">
                                     <strong>Tips:</strong> Token är oftast giltig i 30+ dagar. Spara den i en profil så slipper du kopiera varje gång!
                                 </p>

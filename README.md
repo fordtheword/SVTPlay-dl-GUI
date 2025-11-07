@@ -235,6 +235,36 @@ PATH hanteras vanligtvis automatiskt när du använder `apt`, `dnf` eller andra 
 - Ha olika profiler för olika serier med olika nedladdningsmappar
 - Spara inställningar för återkommande nedladdningar
 
+### TV4 Play och premium-innehåll
+
+För att ladda ner från TV4 Play behöver du oftast ange en **refresh token** från din inloggning.
+
+**Enklaste metoden att hämta token:**
+
+1. Öppna [TV4 Play](https://www.tv4play.se/) i din webbläsare och logga in
+2. Tryck `F12` för att öppna Developer Tools
+3. Gå till fliken **"Console"**
+4. Klistra in följande kod och tryck Enter:
+   ```javascript
+   document.cookie.split("; ").find((row) => row.startsWith("tv4-refresh-token="))?.split("=")[1];
+   ```
+5. Kopiera den text som visas (utan citattecken)
+6. Klistra in i **"Token"**-fältet i GUI:t
+
+**Alternativ metod (manuell sökning):**
+
+1. Öppna TV4 Play och logga in
+2. Tryck `F12` → Fliken "Application" (Chrome) eller "Storage" (Firefox)
+3. Välj "Cookies" → "https://www.tv4play.se"
+4. Hitta cookien som heter **`tv4-refresh-token`**
+5. Kopiera värdet (börjar ofta med "ey...")
+
+**Tips:**
+- Token är oftast giltig i 30+ dagar
+- Spara token i en profil så slipper du kopiera varje gång
+- Du kan använda token från vilken dator som helst (den behöver inte vara från nedladdningsservern)
+- För gratis innehåll på TV4 Play kan token behövas även om ingen inloggning krävs för att se videon
+
 ### Anpassade nedladdningsmappar
 
 Du kan ange var filer ska laddas ner genom att fylla i "Nedladdningsmapp"-fältet:
