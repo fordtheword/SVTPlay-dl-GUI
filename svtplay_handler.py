@@ -166,15 +166,39 @@ class SVTPlayDownloader:
             # Read output
             stdout, stderr = process.communicate()
 
-            if process.returncode == 0:
+            # Combine stdout and stderr for better error detection
+            full_output = (stdout or '') + '\n' + (stderr or '')
+
+            # Check for specific error conditions
+            token_required = 'token' in full_output.lower() and ('need' in full_output.lower() or 'require' in full_output.lower())
+            no_videos_found = 'no videos found' in full_output.lower()
+            drm_protected = 'drm' in full_output.lower() and 'protected' in full_output.lower()
+
+            # Determine if download actually succeeded
+            success = process.returncode == 0 and not token_required and not no_videos_found
+
+            if success:
                 self.downloads[download_id]['status'] = 'completed'
                 self.downloads[download_id]['message'] = 'Download completed'
                 self.downloads[download_id]['progress'] = 100
                 self.downloads[download_id]['finished_at'] = datetime.now().isoformat()
             else:
                 self.downloads[download_id]['status'] = 'failed'
-                self.downloads[download_id]['message'] = 'Download failed'
-                self.downloads[download_id]['error'] = stderr or 'Unknown error'
+
+                # Provide specific error messages
+                if token_required:
+                    self.downloads[download_id]['message'] = 'Token required or expired'
+                    self.downloads[download_id]['error'] = 'This content requires a valid TV4 Play token. Please check that you have entered a token and that it has not expired. Click the "?" button next to the Token field for instructions.'
+                elif no_videos_found:
+                    self.downloads[download_id]['message'] = 'No videos found'
+                    self.downloads[download_id]['error'] = 'No videos were found at this URL. Please check the URL or try logging in to TV4 Play and refreshing your token.'
+                elif drm_protected:
+                    self.downloads[download_id]['message'] = 'DRM protected content'
+                    self.downloads[download_id]['error'] = 'This content is DRM protected and cannot be downloaded.'
+                else:
+                    self.downloads[download_id]['message'] = 'Download failed'
+                    self.downloads[download_id]['error'] = stderr or stdout or 'Unknown error'
+
                 self.downloads[download_id]['finished_at'] = datetime.now().isoformat()
 
         except Exception as e:
@@ -260,15 +284,39 @@ class SVTPlayDownloader:
             # Read output
             stdout, stderr = process.communicate()
 
-            if process.returncode == 0:
+            # Combine stdout and stderr for better error detection
+            full_output = (stdout or '') + '\n' + (stderr or '')
+
+            # Check for specific error conditions
+            token_required = 'token' in full_output.lower() and ('need' in full_output.lower() or 'require' in full_output.lower())
+            no_videos_found = 'no videos found' in full_output.lower()
+            drm_protected = 'drm' in full_output.lower() and 'protected' in full_output.lower()
+
+            # Determine if download actually succeeded
+            success = process.returncode == 0 and not token_required and not no_videos_found
+
+            if success:
                 self.downloads[download_id]['status'] = 'completed'
                 self.downloads[download_id]['message'] = 'Season download completed'
                 self.downloads[download_id]['progress'] = 100
                 self.downloads[download_id]['finished_at'] = datetime.now().isoformat()
             else:
                 self.downloads[download_id]['status'] = 'failed'
-                self.downloads[download_id]['message'] = 'Season download failed'
-                self.downloads[download_id]['error'] = stderr or 'Unknown error'
+
+                # Provide specific error messages
+                if token_required:
+                    self.downloads[download_id]['message'] = 'Token required or expired'
+                    self.downloads[download_id]['error'] = 'This content requires a valid TV4 Play token. Please check that you have entered a token and that it has not expired. Click the "?" button next to the Token field for instructions.'
+                elif no_videos_found:
+                    self.downloads[download_id]['message'] = 'No videos found'
+                    self.downloads[download_id]['error'] = 'No videos were found at this URL. Please check the URL or try logging in to TV4 Play and refreshing your token.'
+                elif drm_protected:
+                    self.downloads[download_id]['message'] = 'DRM protected content'
+                    self.downloads[download_id]['error'] = 'This content is DRM protected and cannot be downloaded.'
+                else:
+                    self.downloads[download_id]['message'] = 'Season download failed'
+                    self.downloads[download_id]['error'] = stderr or stdout or 'Unknown error'
+
                 self.downloads[download_id]['finished_at'] = datetime.now().isoformat()
 
         except Exception as e:

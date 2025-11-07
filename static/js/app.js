@@ -609,3 +609,107 @@ async function upgradeSystem() {
         upgradeBtn.innerHTML = '<i class="bi bi-arrow-up-circle"></i> Uppgradera system';
     }
 }
+
+// ===== Folder Browser =====
+
+let currentBrowserPath = '';
+let folderBrowserModal = null;
+
+// Initialize folder browser modal
+document.addEventListener('DOMContentLoaded', function() {
+    folderBrowserModal = new bootstrap.Modal(document.getElementById('folderBrowserModal'));
+
+    // Browse button click
+    document.getElementById('browseFolderBtn').addEventListener('click', openFolderBrowser);
+
+    // Refresh button click
+    document.getElementById('refreshFoldersBtn').addEventListener('click', function() {
+        loadFolders(currentBrowserPath || undefined);
+    });
+
+    // Select folder button click
+    document.getElementById('selectFolderBtn').addEventListener('click', function() {
+        document.getElementById('downloadDir').value = currentBrowserPath;
+        folderBrowserModal.hide();
+        showNotification('Mapp vald: ' + currentBrowserPath, 'success');
+    });
+});
+
+async function openFolderBrowser() {
+    // Get current path from input or use default
+    const currentInput = document.getElementById('downloadDir').value.trim();
+    const startPath = currentInput || undefined;
+
+    // Show modal
+    folderBrowserModal.show();
+
+    // Load folders
+    await loadFolders(startPath);
+}
+
+async function loadFolders(path) {
+    const folderList = document.getElementById('folderList');
+    const currentPathInput = document.getElementById('currentPathInput');
+
+    try {
+        // Show loading
+        folderList.innerHTML = `
+            <div class="text-center p-4">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Laddar...</span>
+                </div>
+            </div>
+        `;
+
+        const response = await fetch('/api/browse-folders', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ path: path })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            currentBrowserPath = data.current_path;
+            currentPathInput.value = currentBrowserPath;
+
+            // Display folders
+            if (data.items.length === 0) {
+                folderList.innerHTML = '<div class="list-group-item text-muted">Inga undermappar hittades</div>';
+            } else {
+                folderList.innerHTML = '';
+                data.items.forEach(item => {
+                    const itemEl = document.createElement('a');
+                    itemEl.href = '#';
+                    itemEl.className = 'list-group-item list-group-item-action d-flex align-items-center';
+
+                    if (item.is_parent) {
+                        itemEl.innerHTML = `
+                            <i class="bi bi-arrow-up-circle me-2"></i>
+                            <span>${item.name}</span>
+                            <small class="text-muted ms-auto">Överordnad mapp</small>
+                        `;
+                    } else {
+                        itemEl.innerHTML = `
+                            <i class="bi bi-folder me-2"></i>
+                            <span>${item.name}</span>
+                        `;
+                    }
+
+                    itemEl.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        loadFolders(item.path);
+                    });
+
+                    folderList.appendChild(itemEl);
+                });
+            }
+        } else {
+            folderList.innerHTML = `<div class="list-group-item list-group-item-danger">Fel: ${data.error}</div>`;
+        }
+    } catch (error) {
+        folderList.innerHTML = `<div class="list-group-item list-group-item-danger">Fel vid laddning: ${error.message}</div>`;
+    }
+}

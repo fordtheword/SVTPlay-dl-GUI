@@ -275,6 +275,68 @@ def get_system_info():
             'error': str(e)
         }), 500
 
+@app.route('/api/browse-folders', methods=['POST'])
+def browse_folders():
+    """Browse folders on the server"""
+    try:
+        data = request.get_json()
+        path = data.get('path', os.path.expanduser('~'))  # Default to user's home directory
+
+        # Security: normalize path and ensure it's absolute
+        path = os.path.abspath(os.path.expanduser(path))
+
+        # Check if path exists and is a directory
+        if not os.path.exists(path):
+            return jsonify({
+                'success': False,
+                'error': 'Path does not exist'
+            }), 400
+
+        if not os.path.isdir(path):
+            # If it's a file, use its parent directory
+            path = os.path.dirname(path)
+
+        # List directories only
+        try:
+            items = []
+
+            # Add parent directory option (if not at root)
+            parent = os.path.dirname(path)
+            if parent != path:  # Not at root
+                items.append({
+                    'name': '..',
+                    'path': parent,
+                    'is_parent': True
+                })
+
+            # List all directories in current path
+            for item in sorted(os.listdir(path)):
+                item_path = os.path.join(path, item)
+                if os.path.isdir(item_path):
+                    items.append({
+                        'name': item,
+                        'path': item_path,
+                        'is_parent': False
+                    })
+
+            return jsonify({
+                'success': True,
+                'current_path': path,
+                'items': items
+            })
+
+        except PermissionError:
+            return jsonify({
+                'success': False,
+                'error': 'Permission denied'
+            }), 403
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 if __name__ == '__main__':
     print("=" * 60)
     print("SVTPlay-dl Web GUI Server")

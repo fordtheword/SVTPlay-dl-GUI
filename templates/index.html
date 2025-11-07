@@ -60,8 +60,13 @@
                     <!-- Download Directory -->
                     <div class="mb-3">
                         <label for="downloadDir" class="form-label">Nedladdningsmapp</label>
-                        <input type="text" class="form-control" id="downloadDir"
-                               placeholder="t.ex. D:\TV-Serier eller /home/user/videos">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="downloadDir"
+                                   placeholder="t.ex. D:\TV-Serier eller /home/user/videos">
+                            <button class="btn btn-outline-secondary" type="button" id="browseFolderBtn">
+                                <i class="bi bi-folder2-open"></i> Bläddra
+                            </button>
+                        </div>
                         <div class="form-text">
                             Ange den mapp där du vill spara nedladdningen. Om tom används standardmappen "downloads".
                             <br><strong>Tips:</strong> Ange din TV-serie-mapp, så skapas en undermapp för serien automatiskt.
@@ -270,6 +275,40 @@
                 <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
             </div>
             <div class="toast-body" id="toastMessage"></div>
+        </div>
+    </div>
+
+    <!-- Folder Browser Modal -->
+    <div class="modal fade" id="folderBrowserModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Välj nedladdningsmapp (på servern)</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Aktuell sökväg:</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="currentPathInput" readonly>
+                            <button class="btn btn-outline-secondary" type="button" id="refreshFoldersBtn" title="Uppdatera">
+                                <i class="bi bi-arrow-clockwise"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="folderList" class="list-group" style="max-height: 400px; overflow-y: auto;">
+                        <div class="text-center p-4">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Laddar...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Avbryt</button>
+                    <button type="button" class="btn btn-primary" id="selectFolderBtn">Välj denna mapp</button>
+                </div>
+            </div>
         </div>
     </div>
 
