@@ -91,3 +91,16 @@ class ProfileManager:
             'success': True,
             'profiles': results
         }
+
+    def save_last_download_folder(self, folder_path):
+        """Save the last used download folder"""
+        self.profiles['_last_download_folder'] = folder_path
+        if self._save_profiles():
+            return {'success': True, 'folder': folder_path}
+        else:
+            return {'success': False, 'error': 'Failed to save last download folder'}
+
+    def get_last_download_folder(self):
+        """Get the last used download folder"""
+        folder = self.profiles.get('_last_download_folder', '')
+        return {'success': True, 'folder': folder}

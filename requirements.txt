@@ -3,3 +3,5 @@ Flask-CORS>=4.0.0
 svtplay-dl>=4.28
 Werkzeug>=3.0.1
 imageio-ffmpeg>=0.4.9
+requests>=2.31.0
+beautifulsoup4>=4.12.0

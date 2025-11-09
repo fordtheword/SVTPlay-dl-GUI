@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadDownloads();
     loadFiles();
     loadProfiles();
+    loadLastDownloadFolder();
 
     // Set up event listeners
     document.getElementById('downloadForm').addEventListener('submit', handleDownload);
@@ -18,6 +19,18 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('profileSelect').addEventListener('change', loadProfileData);
     document.getElementById('upgradeBtn').addEventListener('click', upgradeSystem);
     document.getElementById('restartBtn').addEventListener('click', restartServer);
+
+    // Video browser event listeners
+    document.getElementById('browseVideosBtn').addEventListener('click', browseVideos);
+    document.getElementById('closeVideoBrowserBtn').addEventListener('click', closeVideoBrowser);
+    document.getElementById('selectAllBtn').addEventListener('click', selectAllVideos);
+    document.getElementById('deselectAllBtn').addEventListener('click', deselectAllVideos);
+    document.getElementById('downloadSelectedBtn').addEventListener('click', downloadSelectedVideos);
+
+    // Bottom toolbar buttons (same functionality)
+    document.getElementById('selectAllBtnBottom').addEventListener('click', selectAllVideos);
+    document.getElementById('deselectAllBtnBottom').addEventListener('click', deselectAllVideos);
+    document.getElementById('downloadSelectedBtnBottom').addEventListener('click', downloadSelectedVideos);
 
     // Load system info
     loadSystemInfo();
@@ -395,6 +408,20 @@ async function loadProfiles() {
         }
     } catch (error) {
         console.error('Error loading profiles:', error);
+    }
+}
+
+// Load last used download folder
+async function loadLastDownloadFolder() {
+    try {
+        const response = await fetch(API_BASE + '/api/preferences/last-folder');
+        const result = await response.json();
+
+        if (result.success && result.folder) {
+            document.getElementById('downloadDir').value = result.folder;
+        }
+    } catch (error) {
+        console.error('Error loading last download folder:', error);
     }
 }
 
@@ -838,4 +865,244 @@ async function loadFolders(path) {
     } catch (error) {
         folderList.innerHTML = `<div class="list-group-item list-group-item-danger">Fel vid laddning: ${error.message}</div>`;
     }
+}
+
+// ============================================================================
+// VIDEO BROWSER & SELECTOR
+// ============================================================================
+
+// Store scraped videos globally
+let scrapedVideos = [];
+
+// Browse videos from a URL
+async function browseVideos() {
+    const url = document.getElementById('urlInput').value.trim();
+
+    if (!url) {
+        showNotification('Vänligen ange en URL först', 'warning');
+        return;
+    }
+
+    // Show the video browser card
+    const browserCard = document.getElementById('videoBrowserCard');
+    const loadingDiv = document.getElementById('videoBrowserLoading');
+    const contentDiv = document.getElementById('videoBrowserContent');
+    const errorDiv = document.getElementById('videoBrowserError');
+
+    browserCard.style.display = 'block';
+    loadingDiv.style.display = 'block';
+    contentDiv.style.display = 'none';
+    errorDiv.style.display = 'none';
+
+    // Scroll to the browser
+    browserCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    try {
+        const response = await fetch(API_BASE + '/api/scrape', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ url, max_videos: 200 })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            scrapedVideos = result.videos;
+            displayVideos(result.videos);
+            loadingDiv.style.display = 'none';
+            contentDiv.style.display = 'block';
+
+            // Update count (both top and bottom)
+            document.getElementById('videoCount').textContent = `${result.count} videos funna`;
+            document.getElementById('videoCountBottom').textContent = `${result.count} videos funna`;
+
+            if (result.limited) {
+                showNotification(`Visar ${result.count} av ${result.total_available} tillgängliga videos`, 'info');
+            }
+        } else {
+            loadingDiv.style.display = 'none';
+            errorDiv.style.display = 'block';
+            document.getElementById('videoBrowserErrorText').textContent = result.error;
+        }
+    } catch (error) {
+        loadingDiv.style.display = 'none';
+        errorDiv.style.display = 'block';
+        document.getElementById('videoBrowserErrorText').textContent = 'Fel vid kommunikation med servern: ' + error.message;
+    }
+}
+
+// Display videos in grid
+function displayVideos(videos) {
+    const videoGrid = document.getElementById('videoGrid');
+    videoGrid.innerHTML = '';
+
+    videos.forEach((video, index) => {
+        const col = document.createElement('div');
+        col.className = 'col-md-4 col-lg-3';
+
+        const card = document.createElement('div');
+        card.className = 'card h-100 video-card';
+        card.dataset.index = index;
+
+        // Thumbnail - use SVG placeholder if no thumbnail available
+        let thumbnailUrl = video.thumbnail;
+        if (!thumbnailUrl) {
+            // Create an inline SVG data URL with the movie title
+            const shortTitle = video.title.substring(0, 25);
+            const svgPlaceholder = `data:image/svg+xml,${encodeURIComponent(`
+                <svg width="300" height="169" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="300" height="169" fill="#667eea"/>
+                    <text x="50%" y="50%" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="16" font-weight="bold">
+                        ${shortTitle}
+                    </text>
+                </svg>
+            `)}`;
+            thumbnailUrl = svgPlaceholder;
+        }
+
+        // Duration formatting (if available)
+        let durationText = '';
+        if (video.duration && video.duration > 0) {
+            const minutes = Math.floor(video.duration / 60);
+            const seconds = video.duration % 60;
+            durationText = `<span class="badge bg-dark position-absolute top-0 end-0 m-2">${minutes}:${seconds.toString().padStart(2, '0')}</span>`;
+        }
+
+        // Episode info
+        let episodeInfo = '';
+        if (video.season && video.episode) {
+            episodeInfo = `<small class="text-muted">S${video.season}E${video.episode}</small>`;
+        } else if (video.episode) {
+            episodeInfo = `<small class="text-muted">Avsnitt ${video.episode}</small>`;
+        }
+
+        card.innerHTML = `
+            <div class="position-relative" style="background-color: #000;">
+                <img src="${thumbnailUrl}" class="card-img-top" alt="${video.title}" style="height: 169px; object-fit: contain;">
+                ${durationText}
+                <div class="position-absolute top-0 start-0 m-2">
+                    <input type="checkbox" class="form-check-input video-checkbox" data-index="${index}" style="width: 24px; height: 24px;">
+                </div>
+            </div>
+            <div class="card-body">
+                <h6 class="card-title" style="font-size: 0.9rem; line-height: 1.2;">${video.title}</h6>
+                ${episodeInfo}
+                ${video.description ? `<p class="card-text small text-muted mt-2" style="font-size: 0.75rem; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${video.description}</p>` : ''}
+            </div>
+        `;
+
+        // Make card clickable to toggle checkbox
+        card.addEventListener('click', function(e) {
+            if (e.target.type !== 'checkbox') {
+                const checkbox = card.querySelector('.video-checkbox');
+                checkbox.checked = !checkbox.checked;
+                updateSelectedCount();
+            }
+        });
+
+        // Update count when checkbox changes
+        card.querySelector('.video-checkbox').addEventListener('change', updateSelectedCount);
+
+        col.appendChild(card);
+        videoGrid.appendChild(col);
+    });
+
+    updateSelectedCount();
+}
+
+// Update selected count
+function updateSelectedCount() {
+    const checkboxes = document.querySelectorAll('.video-checkbox');
+    const selectedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+
+    // Update both top and bottom counts
+    document.getElementById('selectedCount').textContent = `${selectedCount} valda`;
+    document.getElementById('selectedCountBottom').textContent = `${selectedCount} valda`;
+
+    // Enable/disable download buttons (both top and bottom)
+    const downloadBtn = document.getElementById('downloadSelectedBtn');
+    const downloadBtnBottom = document.getElementById('downloadSelectedBtnBottom');
+    downloadBtn.disabled = selectedCount === 0;
+    downloadBtnBottom.disabled = selectedCount === 0;
+}
+
+// Select all videos
+function selectAllVideos() {
+    const checkboxes = document.querySelectorAll('.video-checkbox');
+    checkboxes.forEach(cb => cb.checked = true);
+    updateSelectedCount();
+}
+
+// Deselect all videos
+function deselectAllVideos() {
+    const checkboxes = document.querySelectorAll('.video-checkbox');
+    checkboxes.forEach(cb => cb.checked = false);
+    updateSelectedCount();
+}
+
+// Download selected videos
+async function downloadSelectedVideos() {
+    const checkboxes = document.querySelectorAll('.video-checkbox:checked');
+    const selectedIndices = Array.from(checkboxes).map(cb => parseInt(cb.dataset.index));
+    const selectedVideos = selectedIndices.map(i => scrapedVideos[i]);
+
+    if (selectedVideos.length === 0) {
+        showNotification('Inga videos valda', 'warning');
+        return;
+    }
+
+    // Get download options from the form
+    const downloadDir = document.getElementById('downloadDir').value.trim();
+    const token = document.getElementById('tokenInput').value.trim();
+    const quality = document.getElementById('qualitySelect').value;
+    const subtitle = document.getElementById('subtitleCheck').checked;
+
+    const options = {
+        quality: quality,
+        subtitle: subtitle
+    };
+
+    if (downloadDir) {
+        options.download_dir = downloadDir;
+    }
+
+    if (token) {
+        options.token = token;
+    }
+
+    try {
+        const urls = selectedVideos.map(v => v.url);
+
+        const response = await fetch(API_BASE + '/api/download/batch', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ urls, options })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showNotification(`${result.count} nedladdningar startade!`, 'success');
+
+            // Close video browser
+            closeVideoBrowser();
+
+            // Refresh downloads list
+            loadDownloads();
+        } else {
+            showNotification('Fel: ' + result.error, 'danger');
+        }
+    } catch (error) {
+        showNotification('Fel vid kommunikation med servern: ' + error.message, 'danger');
+    }
+}
+
+// Close video browser
+function closeVideoBrowser() {
+    document.getElementById('videoBrowserCard').style.display = 'none';
+    scrapedVideos = [];
 }

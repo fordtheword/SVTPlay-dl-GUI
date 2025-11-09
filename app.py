@@ -46,6 +46,20 @@ def list_episodes():
     result = downloader.list_episodes(url)
     return jsonify(result)
 
+@app.route('/api/scrape', methods=['POST'])
+def scrape_videos():
+    """Scrape a URL and return all videos with detailed metadata (thumbnails, titles, etc.)"""
+    data = request.get_json()
+    url = data.get('url')
+    max_videos = data.get('max_videos', 200)  # Increased limit to get more movies
+    token = data.get('token')  # Optional token for TV4 Play
+
+    if not url:
+        return jsonify({'success': False, 'error': 'URL is required'}), 400
+
+    result = downloader.scrape_videos_with_metadata(url, max_videos, token)
+    return jsonify(result)
+
 @app.route('/api/download', methods=['POST'])
 def start_download():
     """Start downloading a single video"""
@@ -55,6 +69,10 @@ def start_download():
 
     if not url:
         return jsonify({'success': False, 'error': 'URL is required'}), 400
+
+    # Save last used download folder if provided
+    if options.get('download_dir'):
+        profile_manager.save_last_download_folder(options['download_dir'])
 
     result = downloader.start_download(url, options)
     return jsonify(result)
@@ -69,8 +87,39 @@ def download_season():
     if not url:
         return jsonify({'success': False, 'error': 'URL is required'}), 400
 
+    # Save last used download folder if provided
+    if options.get('download_dir'):
+        profile_manager.save_last_download_folder(options['download_dir'])
+
     result = downloader.download_season(url, options)
     return jsonify(result)
+
+@app.route('/api/download/batch', methods=['POST'])
+def download_batch():
+    """Download multiple selected videos"""
+    data = request.get_json()
+    urls = data.get('urls', [])
+    options = data.get('options', {})
+
+    if not urls:
+        return jsonify({'success': False, 'error': 'At least one URL is required'}), 400
+
+    # Save last used download folder if provided
+    if options.get('download_dir'):
+        profile_manager.save_last_download_folder(options['download_dir'])
+
+    # Start a download for each URL
+    download_ids = []
+    for url in urls:
+        result = downloader.start_download(url, options)
+        if result['success']:
+            download_ids.append(result['download_id'])
+
+    return jsonify({
+        'success': True,
+        'download_ids': download_ids,
+        'count': len(download_ids)
+    })
 
 @app.route('/api/downloads', methods=['GET'])
 def get_downloads():
@@ -161,6 +210,20 @@ def search_profiles():
     """Search profiles by name"""
     query = request.args.get('q', '')
     result = profile_manager.search_profiles(query)
+    return jsonify(result)
+
+@app.route('/api/preferences/last-folder', methods=['GET'])
+def get_last_folder():
+    """Get the last used download folder"""
+    result = profile_manager.get_last_download_folder()
+    return jsonify(result)
+
+@app.route('/api/preferences/last-folder', methods=['POST'])
+def save_last_folder():
+    """Save the last used download folder"""
+    data = request.get_json()
+    folder = data.get('folder', '')
+    result = profile_manager.save_last_download_folder(folder)
     return jsonify(result)
 
 # System management endpoints

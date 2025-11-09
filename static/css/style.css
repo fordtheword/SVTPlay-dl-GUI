@@ -148,6 +148,57 @@ body {
     font-size: 0.9rem;
 }
 
+/* Video Browser Styles */
+.video-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.video-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    border-color: var(--primary-color);
+}
+
+.video-card img {
+    transition: opacity 0.3s ease;
+}
+
+.video-card:hover img {
+    opacity: 0.9;
+}
+
+.video-checkbox {
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.video-checkbox:checked {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+}
+
+#videoBrowserCard {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#videoGrid .card-title {
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
 @media (max-width: 768px) {
     .container {
         padding: 15px;
@@ -164,5 +215,12 @@ body {
     .btn-group .btn {
         border-radius: 8px !important;
         margin-bottom: 5px;
+    }
+
+    /* Make video cards full width on mobile */
+    #videoGrid .col-md-4,
+    #videoGrid .col-lg-3 {
+        flex: 0 0 100%;
+        max-width: 100%;
     }
 }
