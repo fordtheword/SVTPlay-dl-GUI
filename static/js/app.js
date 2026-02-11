@@ -226,9 +226,10 @@ function displayDownloads(downloads) {
 
                 ${download.status === 'downloading' ? `
                     <div class="progress mb-2">
-                        <div class="progress-bar progress-bar-striped progress-bar-animated"
-                             role="progressbar" style="width: 100%">
-                            Laddar ner...
+                        <div class="progress-bar progress-bar-striped progress-bar-animated ${download.progress > 0 ? 'bg-success' : ''}"
+                             role="progressbar"
+                             style="width: ${download.progress > 0 ? download.progress : 100}%">
+                            ${download.progress > 0 ? download.progress.toFixed(1) + '%' : 'Laddar ner...'}
                         </div>
                     </div>
                 ` : ''}

@@ -517,6 +517,46 @@ class SVTPlayDownloader:
 
         return {'success': True, 'download_id': download_id}
 
+    def _read_stderr_with_progress(self, process, download_id):
+        """Read stderr char by char, parsing progress from \\r-delimited lines.
+        svtplay-dl uses \\r to update progress in-place, so readline() won't work.
+        Output format: \\r[pos/total][====....] ETA: H:MM:SS
+        Returns only non-progress lines (actual log/error messages)."""
+        # Match svtplay-dl's [pos/total] progress format
+        segment_pattern = re.compile(r'\[\d+/\d+\]')
+        pos_total_pattern = re.compile(r'\[(\d+)/(\d+)\]')
+        stderr_lines = []
+        line_buffer = ''
+
+        while True:
+            char = process.stderr.read(1)
+            if not char:
+                break
+            if char in ('\r', '\n'):
+                if line_buffer.strip():
+                    if segment_pattern.search(line_buffer):
+                        # Progress line — parse it but don't store it
+                        match = pos_total_pattern.search(line_buffer)
+                        if match:
+                            pos = int(match.group(1))
+                            total = int(match.group(2))
+                            if total > 0:
+                                progress = round(pos / total * 100, 1)
+                                self.downloads[download_id]['progress'] = min(progress, 99)
+                                self.downloads[download_id]['message'] = f'Laddar ner... {progress}%'
+                    else:
+                        # Actual log/error line — keep it
+                        stderr_lines.append(line_buffer)
+                line_buffer = ''
+            else:
+                line_buffer += char
+
+        if line_buffer.strip():
+            if not segment_pattern.search(line_buffer):
+                stderr_lines.append(line_buffer)
+
+        return '\n'.join(stderr_lines)
+
     def _get_service_name(self, url):
         """Detect streaming service from URL"""
         if 'svtplay.se' in url.lower():
@@ -581,11 +621,26 @@ class SVTPlayDownloader:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
-                env=get_env_with_local_bin()  # Add bin/ to PATH for local ffmpeg
+                env=get_env_with_local_bin()
             )
 
-            # Read output
-            stdout, stderr = process.communicate()
+            # Drain stdout in a thread to prevent pipe deadlock
+            stdout_data = []
+            def drain_stdout():
+                data = process.stdout.read()
+                if data:
+                    stdout_data.append(data)
+
+            stdout_thread = threading.Thread(target=drain_stdout)
+            stdout_thread.daemon = True
+            stdout_thread.start()
+
+            # Read stderr in real-time for progress updates
+            stderr = self._read_stderr_with_progress(process, download_id)
+
+            stdout_thread.join(timeout=10)
+            stdout = stdout_data[0] if stdout_data else ''
+            process.wait()
 
             # Debug: Print output
             print("=" * 80)
