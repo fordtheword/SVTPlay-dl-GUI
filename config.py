@@ -6,8 +6,8 @@ class Config:
     # Base directory
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
-    # Download directory
-    DOWNLOAD_DIR = os.path.join(BASE_DIR, 'downloads')
+    # Download directory (override with DOWNLOAD_DIR env var for Docker)
+    DOWNLOAD_DIR = os.environ.get('DOWNLOAD_DIR', os.path.join(BASE_DIR, 'downloads'))
 
     # FFmpeg path (will be set during init)
     FFMPEG_PATH = None

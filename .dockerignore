@@ -1,0 +1,14 @@
+venv/
+__pycache__/
+*.pyc
+downloads/
+.git/
+.claude/
+screenshots/
+*.bat
+*.md
+profiles.json
+next_data.json
+test_*.py
+cleanup_names.py
+move_to_downloads.py

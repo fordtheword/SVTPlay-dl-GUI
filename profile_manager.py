@@ -5,8 +5,8 @@ from datetime import datetime
 class ProfileManager:
     """Manages download profiles for series"""
 
-    def __init__(self, profiles_file='profiles.json'):
-        self.profiles_file = profiles_file
+    def __init__(self, profiles_file=None):
+        self.profiles_file = profiles_file or os.environ.get('PROFILES_FILE', 'profiles.json')
         self.profiles = self._load_profiles()
 
     def _load_profiles(self):
