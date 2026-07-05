@@ -9,6 +9,12 @@ class Config:
     # Download directory (override with DOWNLOAD_DIR env var for Docker)
     DOWNLOAD_DIR = os.environ.get('DOWNLOAD_DIR', os.path.join(BASE_DIR, 'downloads'))
 
+    # Network path to the download directory as seen from client machines
+    # (e.g. \\192.168.1.72\torrents\downloads\svtplay). When set, the
+    # "open folder" button copies this path instead of opening a folder
+    # on the server, which is useless inside Docker.
+    NETWORK_DOWNLOAD_PATH = os.environ.get('NETWORK_DOWNLOAD_PATH', '')
+
     # FFmpeg path (will be set during init)
     FFMPEG_PATH = None
 

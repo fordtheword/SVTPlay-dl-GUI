@@ -776,6 +776,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Browse button click
     document.getElementById('browseFolderBtn').addEventListener('click', openFolderBrowser);
 
+    // Open folder in Explorer button click
+    document.getElementById('openFolderBtn').addEventListener('click', openDownloadFolder);
+
     // Refresh button click
     document.getElementById('refreshFoldersBtn').addEventListener('click', function() {
         loadFolders(currentBrowserPath || undefined);
@@ -788,6 +791,44 @@ document.addEventListener('DOMContentLoaded', function() {
         showNotification('Mapp vald: ' + currentBrowserPath, 'success');
     });
 });
+
+async function openDownloadFolder() {
+    const folder = document.getElementById('downloadDir').value.trim();
+
+    try {
+        const response = await fetch('/api/open-folder', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ folder: folder })
+        });
+        const result = await response.json();
+
+        if (!result.success) {
+            showNotification(result.error || 'Kunde inte öppna mappen', 'danger');
+        } else if (result.mode === 'network_path') {
+            copyTextToClipboard(result.network_path);
+            showNotification('Sökväg kopierad! Klistra in i Utforskaren: ' + result.network_path, 'success');
+        }
+    } catch (error) {
+        showNotification('Kunde inte öppna mappen: ' + error.message, 'danger');
+    }
+}
+
+function copyTextToClipboard(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text);
+        return;
+    }
+    // Fallback for plain http (clipboard API requires a secure context)
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+}
 
 async function openFolderBrowser() {
     // Get current path from input or use default

@@ -226,6 +226,35 @@ def save_last_folder():
     result = profile_manager.save_last_download_folder(folder)
     return jsonify(result)
 
+@app.route('/api/open-folder', methods=['POST'])
+def open_folder():
+    """Open a folder in the system file manager (Explorer) on the server machine"""
+    data = request.get_json(silent=True) or {}
+    folder = data.get('folder') or Config.DOWNLOAD_DIR
+
+    # Remote deployment (e.g. Docker on the NUC): opening a folder on the
+    # server is pointless, so hand the client a network path to copy instead
+    if Config.NETWORK_DOWNLOAD_PATH:
+        return jsonify({
+            'success': True,
+            'mode': 'network_path',
+            'network_path': Config.NETWORK_DOWNLOAD_PATH
+        })
+
+    if not os.path.isdir(folder):
+        return jsonify({'success': False, 'error': f'Mappen finns inte: {folder}'}), 404
+
+    try:
+        if os.name == 'nt':
+            os.startfile(folder)
+        else:
+            import subprocess
+            opener = 'open' if sys.platform == 'darwin' else 'xdg-open'
+            subprocess.Popen([opener, folder])
+        return jsonify({'success': True, 'mode': 'opened', 'folder': folder})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 # System management endpoints
 
 @app.route('/api/system/upgrade', methods=['POST'])
